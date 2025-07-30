@@ -148,11 +148,12 @@ export class StudentService {
     // For BREVET: returns array of top 10 students (Top 10 Mauritanie)
     static async getLeaderboard(year: number, examType: "BAC" | "BREVET", limit: number = 100) {
         if (examType === "BAC") {
-            // For BAC: return object grouped by sections with top 10 each and section stats
+            // For BAC: return object grouped by sections with top 10 ADMITTED students each
             const students = await prisma.student.findMany({
                 where: {
                     year,
-                    examType
+                    examType,
+                    admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
                 },
                 orderBy: {
                     rang: 'asc'
@@ -161,11 +162,13 @@ export class StudentService {
                     matricule: true,
                     nom_complet: true,
                     ecole: true,
+                    etablissement: true,
                     moyenne: true,
                     rang: true,
                     wilaya: true,
                     section: true,
-                    admis: true
+                    admis: true,
+                    decision_text: true
                 }
             })
 
@@ -197,11 +200,13 @@ export class StudentService {
                         matricule: student.matricule,
                         nom_complet: student.nom_complet,
                         ecole: student.ecole,
+                        etablissement: student.etablissement,
                         moyenne: student.moyenne,
                         rang: student.rang,
                         wilaya: student.wilaya,
                         section: student.section,
-                        admis: student.admis
+                        admis: student.admis,
+                        decision_text: student.decision_text
                     })
                 }
             }
@@ -223,11 +228,12 @@ export class StudentService {
 
             return result
         } else {
-            // For BREVET: return array of top 10 students only
+            // For BREVET: return array of top 10 ADMITTED students only
             const students = await prisma.student.findMany({
                 where: {
                     year,
-                    examType
+                    examType,
+                    admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
                 },
                 orderBy: {
                     rang: 'asc'
@@ -237,11 +243,13 @@ export class StudentService {
                     matricule: true,
                     nom_complet: true,
                     ecole: true,
+                    etablissement: true,
                     moyenne: true,
                     rang: true,
                     wilaya: true,
                     section: true,
-                    admis: true
+                    admis: true,
+                    decision_text: true
                 }
             })
 
@@ -249,11 +257,13 @@ export class StudentService {
                 matricule: student.matricule,
                 nom_complet: student.nom_complet,
                 ecole: student.ecole,
+                etablissement: student.etablissement,
                 moyenne: student.moyenne,
                 rang: student.rang,
                 wilaya: student.wilaya || undefined,
                 section: student.section,
-                admis: student.admis
+                admis: student.admis,
+                decision_text: student.decision_text
             }))
         }
     }

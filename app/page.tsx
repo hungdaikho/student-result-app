@@ -260,7 +260,11 @@ export default function HomePage() {
           !Array.isArray(data) &&
           Object.keys(data).length > 0 &&
           Object.values(data).some(
-            (section: any) => Array.isArray(section) && section.length > 0
+            (section: any) =>
+              section &&
+              section.students &&
+              Array.isArray(section.students) &&
+              section.students.length > 0
           );
 
         if (!hasValidData) {
@@ -380,7 +384,16 @@ export default function HomePage() {
   // Get available sections for slider
   const availableSections = Object.keys(leaderboard)?.filter((section) => {
     const sectionData = leaderboard[section];
-    return sectionData && Array.isArray(sectionData) && sectionData.length > 0;
+    // For BAC: check if section has students array, for BREVET: check if it's array
+    if (selectedExamType === "BAC") {
+      return (
+        sectionData && Array.isArray(sectionData) && sectionData.length > 0
+      );
+    } else {
+      return (
+        sectionData && Array.isArray(sectionData) && sectionData.length > 0
+      );
+    }
   });
 
   // Auto-slide effect with 6-second intervals (only for BAC with multiple sections)
@@ -404,7 +417,9 @@ export default function HomePage() {
   // Get current section data
   const currentSection = availableSections[currentSlideIndex];
   const currentSectionData = currentSection
-    ? leaderboard[currentSection] || []
+    ? (selectedExamType === "BAC" && leaderboard[currentSection]?.students
+        ? leaderboard[currentSection].students
+        : leaderboard[currentSection]) || []
     : [];
 
   // Touch handlers for swipe functionality
@@ -494,11 +509,11 @@ export default function HomePage() {
     );
   };
 
-  const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return "bg-yellow-500 hover:bg-yellow-600"; // Gold
-    if (rank === 2) return "bg-gray-400 hover:bg-gray-500"; // Silver
-    if (rank === 3) return "bg-amber-600 hover:bg-amber-700"; // Bronze
-    return "bg-blue-500 hover:bg-blue-600"; // Blue for other ranks
+  const getRankBadgeColor = (position: number) => {
+    if (position === 1) return "bg-yellow-500 hover:bg-yellow-600"; // Gold
+    if (position === 2) return "bg-gray-400 hover:bg-gray-500"; // Silver
+    if (position === 3) return "bg-amber-600 hover:bg-amber-700"; // Bronze
+    return "bg-blue-500 hover:bg-blue-600"; // Blue for other positions
   };
 
   const getDecisionBadgeVariant = (decisionText: string) => {
@@ -1052,10 +1067,10 @@ export default function HomePage() {
                               <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                                 <Badge
                                   className={`${getRankBadgeColor(
-                                    student.rang
+                                    index + 1
                                   )} text-white transition-colors text-xs sm:text-sm flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-1`}
                                 >
-                                  {student.rang}
+                                  {index + 1}
                                 </Badge>
                                 <div className="min-w-0 flex-1">
                                   <button
