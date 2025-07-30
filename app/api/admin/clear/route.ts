@@ -40,12 +40,21 @@ export async function DELETE(request: NextRequest) {
 
       // Auto-clear wilayas cache after successful data clearing
       try {
-        console.log("🧹 Auto-clearing wilayas cache after data clearing...")
+        console.log("🧹 Auto-clearing caches after data clearing...")
         const { clearWilayasCache } = await import("../../wilayas/route")
         clearWilayasCache()
-        console.log("✅ Wilayas cache cleared successfully")
+
+        // Also clear database-info cache
+        const { clearDatabaseInfoCache } = await import("../database-info/route")
+        clearDatabaseInfoCache()
+
+        // Also clear statistics cache
+        const { clearStatisticsCache } = await import("../../statistics/route")
+        clearStatisticsCache()
+
+        console.log("✅ All caches cleared successfully")
       } catch (cacheError) {
-        console.error("⚠️ Failed to clear wilayas cache:", cacheError)
+        console.error("⚠️ Failed to clear caches:", cacheError)
         // Don't fail the operation if cache clearing fails
       }
 

@@ -414,12 +414,26 @@ export async function POST(request: NextRequest) {
 
       // Auto-clear wilayas cache after successful upload
       try {
-        console.log("🧹 Auto-clearing wilayas cache after successful upload...")
+        console.log("🧹 Auto-clearing caches after successful upload...")
         const { clearWilayasCache } = await import("../../wilayas/route")
         clearWilayasCache()
-        console.log("✅ Wilayas cache cleared successfully")
+
+        // Also clear database-info cache
+        const { clearDatabaseInfoCache } = await import("../database-info/route")
+        clearDatabaseInfoCache()
+
+        // Also clear statistics cache
+        const { clearStatisticsCache } = await import("../../statistics/route")
+        clearStatisticsCache()
+
+        console.log("✅ All caches cleared successfully")
+
+        // Force a small delay to ensure database consistency on server
+        console.log("⏱️ Ensuring database consistency...")
+        await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
+
       } catch (cacheError) {
-        console.error("⚠️ Failed to clear wilayas cache:", cacheError)
+        console.error("⚠️ Failed to clear caches:", cacheError)
         // Don't fail the upload if cache clearing fails
       }
 
