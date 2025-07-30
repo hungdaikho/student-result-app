@@ -43,6 +43,17 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 export const maxDuration = 300 // Maximum allowed: 300 seconds (5 minutes)
 
+// Enhanced error tracking
+interface ProcessingStats {
+  totalRows: number
+  processedRows: number
+  validStudents: number
+  skippedRows: number
+  errorRows: number
+  duplicateRows: number
+  processingTime: number
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log("🚀 Upload API called - Environment:", process.env.NODE_ENV)
@@ -122,17 +133,42 @@ export async function POST(request: NextRequest) {
     // Import XLSX dynamically
     const XLSX = await import("xlsx")
 
-    // Parse Excel file
+    // Parse Excel file with enhanced error handling
     console.log("📊 Parsing Excel file...")
-    const workbook = XLSX.read(buffer, { type: "buffer" })
-    const sheetName = workbook.SheetNames[0]
+    let workbook, rawData
+    try {
+      workbook = XLSX.read(buffer, {
+        type: "buffer",
+        cellText: false,
+        cellDates: true,
+        cellNF: false
+      })
+      const sheetName = workbook.SheetNames[0]
 
-    if (!sheetName) {
-      return NextResponse.json({ error: "Excel file has no sheets" }, { status: 400 })
+      if (!sheetName) {
+        return NextResponse.json({ error: "Excel file has no sheets" }, { status: 400 })
+      }
+
+      console.log(`📄 Processing worksheet: "${sheetName}"`)
+      const worksheet = workbook.Sheets[sheetName]
+
+      // Convert to JSON with enhanced options
+      rawData = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        raw: false,
+        dateNF: 'YYYY-MM-DD',
+        defval: ''
+      }) as any[][]
+
+      console.log(`📊 Raw data extracted: ${rawData.length} rows`)
+
+    } catch (parseError: any) {
+      console.error("❌ Excel parsing failed:", parseError)
+      return NextResponse.json({
+        error: "Failed to parse Excel file. Please ensure it's a valid Excel file.",
+        details: parseError.message
+      }, { status: 400 })
     }
-
-    const worksheet = workbook.Sheets[sheetName]
-    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][]
 
     console.log("📊 Raw data rows:", rawData.length)
 
@@ -159,10 +195,24 @@ export async function POST(request: NextRequest) {
     console.log("📊 Headers:", headers)
     console.log("📊 Has mapping:", hasMapping)
 
-    // Process the data
+    // Enhanced processing statistics
+    const processingStats: ProcessingStats = {
+      totalRows: rawData.length - 1, // Exclude header
+      processedRows: 0,
+      validStudents: 0,
+      skippedRows: 0,
+      errorRows: 0,
+      duplicateRows: 0,
+      processingTime: 0
+    }
+
+    const processingStartTime = Date.now()
+
+    // Process the data with enhanced tracking
     const students: Student[] = []
     const errors: string[] = []
     const seenMatricules = new Set<string>() // Track duplicates within the file
+    const rowDetails: { [key: number]: string } = {} // Track what happened to each row
 
     // Function to get value by field name using mapping or index
     const getFieldValue = (row: any[], field: string, defaultIndex?: number): any => {
@@ -174,34 +224,53 @@ export async function POST(request: NextRequest) {
       return defaultIndex !== undefined ? row[defaultIndex] : null
     }
 
-    // Skip header row
+    // Enhanced row processing with detailed tracking
     for (let i = 1; i < rawData.length; i++) {
       const row = rawData[i]
+      processingStats.processedRows++
 
       try {
-        // Skip empty rows
-        if (!row || row.length === 0 || !row[0]) {
+        // Skip completely empty rows but track them
+        if (!row || row.length === 0 || row.every(cell => !cell || String(cell).trim() === '')) {
+          processingStats.skippedRows++
+          rowDetails[i] = `SKIPPED: Empty row`
+          console.log(`⚠️ Row ${i + 1}: Skipped (completely empty)`)
           continue
         }
 
-        // Get values using mapping or default indices
-        const matricule = String(getFieldValue(row, "matricule", 0) || "").trim()
-        const nom_complet = String(getFieldValue(row, "nom_complet", 1) || "").trim()
+        // Get values using mapping or default indices with enhanced validation
+        const matriculeRaw = getFieldValue(row, "matricule", 0)
+        const nom_completRaw = getFieldValue(row, "nom_complet", 1)
 
-        // Basic validation first
+        const matricule = String(matriculeRaw || "").trim()
+        const nom_complet = String(nom_completRaw || "").trim()
+
+        // Enhanced validation with detailed error messages
         if (!matricule) {
-          errors.push(`Row ${i + 1}: Missing matricule`)
+          processingStats.errorRows++
+          const errorMsg = `Row ${i + 1}: Missing matricule (cell value: "${matriculeRaw}")`
+          errors.push(errorMsg)
+          rowDetails[i] = `ERROR: Missing matricule`
+          console.log(`❌ ${errorMsg}`)
           continue
         }
 
         if (!nom_complet) {
-          errors.push(`Row ${i + 1}: Missing nom_complet`)
+          processingStats.errorRows++
+          const errorMsg = `Row ${i + 1}: Missing nom_complet (cell value: "${nom_completRaw}")`
+          errors.push(errorMsg)
+          rowDetails[i] = `ERROR: Missing nom_complet`
+          console.log(`❌ ${errorMsg}`)
           continue
         }
 
         // Check for duplicate matricule within the same file
         if (seenMatricules.has(matricule)) {
-          errors.push(`Row ${i + 1}: Duplicate matricule '${matricule}' found in file`)
+          processingStats.duplicateRows++
+          const errorMsg = `Row ${i + 1}: Duplicate matricule '${matricule}' found in file`
+          errors.push(errorMsg)
+          rowDetails[i] = `ERROR: Duplicate matricule`
+          console.log(`❌ ${errorMsg}`)
           continue
         }
         seenMatricules.add(matricule)
@@ -209,12 +278,24 @@ export async function POST(request: NextRequest) {
         // Calculate admis using helper function based on decision text only
         const decisionText = String(getFieldValue(row, "decision", 7) || "").trim()
 
+        // Enhanced moyenne processing with validation
+        let moyenne = 0
+        const moyenneRaw = getFieldValue(row, "moyenne", 4)
+        if (moyenneRaw !== null && moyenneRaw !== undefined && moyenneRaw !== '') {
+          const moyenneStr = String(moyenneRaw).replace(',', '.').trim()
+          moyenne = Number.parseFloat(moyenneStr)
+          if (isNaN(moyenne)) {
+            console.warn(`⚠️ Row ${i + 1}: Invalid moyenne "${moyenneRaw}", setting to 0`)
+            moyenne = 0
+          }
+        }
+
         const student: Student = {
           matricule,
           nom_complet,
           ecole: String(getFieldValue(row, "ecole", 2) || "").trim(),
           etablissement: String(getFieldValue(row, "etablissement", 3) || "").trim(),
-          moyenne: Number(getFieldValue(row, "moyenne", 4)) || 0,
+          moyenne,
           rang: Number(getFieldValue(row, "rang", 5)) || 0,
           admis: isStudentAdmitted(decisionText),
           decision_text: decisionText,
@@ -230,12 +311,33 @@ export async function POST(request: NextRequest) {
         }
 
         students.push(student)
+        processingStats.validStudents++
+        rowDetails[i] = `SUCCESS: Student added (${student.admis ? 'ADMIS' : 'NOT ADMIS'})`
+
+        // Log progress every 1000 rows
+        if (processingStats.processedRows % 1000 === 0) {
+          console.log(`📊 Progress: ${processingStats.processedRows}/${processingStats.totalRows} rows processed, ${processingStats.validStudents} valid students`)
+        }
       } catch (error) {
-        errors.push(`Row ${i + 1}: Error processing row - ${error}`)
+        processingStats.errorRows++
+        const errorMsg = `Row ${i + 1}: Error processing row - ${error}`
+        errors.push(errorMsg)
+        rowDetails[i] = `ERROR: Processing failed - ${error}`
+        console.error(`❌ ${errorMsg}`)
       }
     }
 
-    console.log(`📊 Processed ${students.length} students with ${errors.length} errors`)
+    // Complete processing statistics
+    processingStats.processingTime = Date.now() - processingStartTime
+
+    console.log(`📊 Processing completed:`)
+    console.log(`📊 Total rows: ${processingStats.totalRows}`)
+    console.log(`📊 Processed rows: ${processingStats.processedRows}`)
+    console.log(`📊 Valid students: ${processingStats.validStudents}`)
+    console.log(`📊 Skipped rows: ${processingStats.skippedRows}`)
+    console.log(`📊 Error rows: ${processingStats.errorRows}`)
+    console.log(`📊 Duplicate rows: ${processingStats.duplicateRows}`)
+    console.log(`📊 Processing time: ${processingStats.processingTime}ms`)
 
     if (students.length === 0) {
       return NextResponse.json(
@@ -291,6 +393,13 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         message: `Successfully processed ${result.uploadedCount} student records for ${examType} ${year}`,
+        success: true,
+        processingStats,
+        uploadStats: {
+          uploadedCount: result.uploadedCount,
+          uploadErrors: result.errors.length,
+          processingErrors: errors.length
+        },
         stats: {
           totalStudents: result.uploadedCount,
           admittedStudents,

@@ -156,7 +156,7 @@ export class StudentService {
                     admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
                 },
                 orderBy: {
-                    rang: 'asc'
+                    moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
                 },
                 select: {
                     matricule: true,
@@ -176,38 +176,59 @@ export class StudentService {
             const grouped: { [key: string]: any } = {}
             const sectionStats: { [key: string]: { total: number, admitted: number, totalScore: number } } = {}
 
+            // First pass: collect all students by section
             for (const student of students) {
                 const section = student.section || 'Other'
-
-                // Initialize section stats
-                if (!sectionStats[section]) {
-                    sectionStats[section] = { total: 0, admitted: 0, totalScore: 0 }
-                }
-                sectionStats[section].total++
-                sectionStats[section].totalScore += student.moyenne
-                if (student.admis) {
-                    sectionStats[section].admitted++
-                }
 
                 // Initialize section array
                 if (!grouped[section]) {
                     grouped[section] = []
                 }
 
-                // Only add top 10 students per section
-                if (grouped[section].length < 10) {
-                    grouped[section].push({
-                        matricule: student.matricule,
-                        nom_complet: student.nom_complet,
-                        ecole: student.ecole,
-                        etablissement: student.etablissement,
-                        moyenne: student.moyenne,
-                        rang: student.rang,
-                        wilaya: student.wilaya,
-                        section: student.section,
-                        admis: student.admis,
-                        decision_text: student.decision_text
-                    })
+                // Add student to section (already sorted by moyenne desc)
+                grouped[section].push({
+                    matricule: student.matricule,
+                    nom_complet: student.nom_complet,
+                    ecole: student.ecole,
+                    etablissement: student.etablissement,
+                    moyenne: student.moyenne,
+                    rang: student.rang,
+                    wilaya: student.wilaya,
+                    section: student.section,
+                    admis: student.admis,
+                    decision_text: student.decision_text
+                })
+            }
+
+            // Second pass: limit to top 10 per section and calculate stats
+            for (const [section, sectionStudents] of Object.entries(grouped)) {
+                // Limit to top 10 students (highest scores first)
+                grouped[section] = sectionStudents.slice(0, 10)
+
+                // Calculate section stats based on ALL students in that section
+                const whereCondition: any = {
+                    year,
+                    examType
+                }
+
+                if (section === 'Other') {
+                    whereCondition.section = null
+                } else {
+                    whereCondition.section = section
+                }
+
+                const allSectionStudents = await prisma.student.findMany({
+                    where: whereCondition
+                })
+
+                const totalInSection = allSectionStudents.length
+                const admittedInSection = allSectionStudents.filter(s => s.admis).length
+                const totalScoreInSection = allSectionStudents.reduce((sum, s) => sum + s.moyenne, 0)
+
+                sectionStats[section] = {
+                    total: totalInSection,
+                    admitted: admittedInSection,
+                    totalScore: totalScoreInSection
                 }
             }
 
@@ -236,7 +257,7 @@ export class StudentService {
                     admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
                 },
                 orderBy: {
-                    rang: 'asc'
+                    moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
                 },
                 take: 10, // Always limit to top 10 for BREVET
                 select: {
@@ -277,7 +298,7 @@ export class StudentService {
                 examType
             },
             orderBy: {
-                rang: 'asc'
+                moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
             }
         })
 
@@ -308,7 +329,7 @@ export class StudentService {
         const students = await prisma.student.findMany({
             where: whereCondition,
             orderBy: {
-                rang: 'asc'
+                moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
             },
             skip: offset,
             take: limit,
@@ -377,7 +398,7 @@ export class StudentService {
                 examType
             },
             orderBy: {
-                rang: 'asc'
+                moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
             },
             select: {
                 matricule: true,

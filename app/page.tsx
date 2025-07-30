@@ -972,30 +972,7 @@ export default function HomePage() {
                           {getSectionDisplayName(currentSection)}
                         </div>
                         {/* Section Stats */}
-                        {leaderboard[`${currentSection}_stats`] && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-300"
-                            >
-                              Moy:{" "}
-                              {leaderboard[`${currentSection}_stats`] &&
-                                leaderboard[`${currentSection}_stats`]
-                                  ?.averageScore}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-300"
-                            >
-                              Réussite:{" "}
-                              {
-                                leaderboard[`${currentSection}_stats`]
-                                  .admissionRate
-                              }
-                              %
-                            </Badge>
-                          </div>
-                        )}
+
                         <div className="flex gap-1">
                           {availableSections.map((_, index) => (
                             <button
