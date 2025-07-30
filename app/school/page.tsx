@@ -339,10 +339,10 @@ export default function SchoolPage() {
                   <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                     <Badge
                       className={`${getRankBadgeColor(
-                        index + 1
+                        student.rang
                       )} text-white text-xs flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-1`}
                     >
-                      {index + 1}
+                      {student.rang}
                     </Badge>
                     <div className="min-w-0 flex-1">
                       <button

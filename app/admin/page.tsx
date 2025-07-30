@@ -128,6 +128,14 @@ export default function AdminPage() {
     }
   }, []);
 
+  // Load initial data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      getFiles();
+      getDatabaseInfo();
+    }
+  }, [isAuthenticated]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -538,6 +546,53 @@ export default function AdminPage() {
     }
   };
 
+  const recalculateRanks = async () => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir recalculer les rangs pour ${selectedExamType} ${selectedYear} ? Cela mettra à jour les rangs basés sur les moyennes.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/recalculate-ranks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          year: selectedYear,
+          examType: selectedExamType,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadResult({
+          success: true,
+          message: result.message,
+          details: result,
+        });
+
+        // Refresh database info after recalculating ranks
+        getDatabaseInfo();
+      } else {
+        setUploadResult({
+          success: false,
+          message: result.error || "Échec du recalcul des rangs",
+        });
+      }
+    } catch (error) {
+      console.error("Recalculate ranks error:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur réseau lors du recalcul des rangs",
+      });
+    }
+  };
+
   const resetToUpload = () => {
     setCurrentStep("upload");
     setExcelAnalysis(null);
@@ -921,19 +976,44 @@ export default function AdminPage() {
                   <FileText className="h-6 w-6 mr-2" />
                   Gestion des Fichiers Uploadés
                 </div>
-                <Button
-                  onClick={getFiles}
-                  disabled={loadingFiles}
-                  variant="outline"
-                  className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 bg-transparent"
-                >
-                  {loadingFiles ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                  )}
-                  Actualiser
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await fetch("/api/admin/clear-cache", {
+                          method: "POST",
+                        });
+                        setUploadResult({
+                          success: true,
+                          message: "Cache supprimé avec succès",
+                        });
+                      } catch (error) {
+                        setUploadResult({
+                          success: false,
+                          message: "Erreur lors de la suppression du cache",
+                        });
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                  >
+                    Vider Cache
+                  </Button>
+                  <Button
+                    onClick={getFiles}
+                    disabled={loadingFiles}
+                    variant="outline"
+                    className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 bg-transparent"
+                  >
+                    {loadingFiles ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Actualiser
+                  </Button>
+                </div>
               </CardTitle>
               <CardDescription>
                 Voir tous les fichiers uploadés, détecter les doublons et gérer
@@ -979,7 +1059,10 @@ export default function AdminPage() {
                         Doublons Détectés
                       </p>
                       <p className="text-2xl font-bold text-orange-700">
-                        {files.reduce((sum, f) => sum + f.duplicateCount, 0)}
+                        {files.reduce(
+                          (sum, f) => sum + (f.duplicateCount || 0),
+                          0
+                        )}
                       </p>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
@@ -987,12 +1070,10 @@ export default function AdminPage() {
                         Taille Totale
                       </p>
                       <p className="text-lg font-bold text-green-700">
-                        {(
-                          files.reduce((sum, f) => sum + f.size, 0) /
-                          1024 /
-                          1024
-                        ).toFixed(2)}{" "}
-                        MB
+                        {files
+                          .reduce((sum, f) => sum + f.studentCount * 0.5, 0)
+                          .toFixed(0)}{" "}
+                        KB
                       </p>
                     </div>
                   </div>
@@ -1687,6 +1768,15 @@ export default function AdminPage() {
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Effacer {selectedExamType} {selectedYear}
+                    </Button>
+                    <Button
+                      onClick={recalculateRanks}
+                      variant="outline"
+                      disabled={analyzing}
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Recalculer Rangs {selectedExamType} {selectedYear}
                     </Button>
                   </div>
                 </>
