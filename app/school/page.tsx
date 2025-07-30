@@ -103,10 +103,10 @@ export default function SchoolPage() {
     }
   };
 
-  const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return "bg-yellow-500";
-    if (rank === 2) return "bg-gray-400";
-    if (rank === 3) return "bg-amber-600";
+  const getRankBadgeColor = (index: number) => {
+    if (index === 1) return "bg-yellow-500"; // Gold for 1st place
+    if (index === 2) return "bg-gray-400"; // Silver for 2nd place
+    if (index === 3) return "bg-amber-600"; // Bronze for 3rd place
     return "bg-blue-500";
   };
 
@@ -339,10 +339,10 @@ export default function SchoolPage() {
                   <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                     <Badge
                       className={`${getRankBadgeColor(
-                        student.rang
+                        index + 1
                       )} text-white text-xs flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-1`}
                     >
-                      {student.rang}
+                      {index + 1}
                     </Badge>
                     <div className="min-w-0 flex-1">
                       <button

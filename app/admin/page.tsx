@@ -790,8 +790,6 @@ export default function AdminPage() {
       });
     }
   };
-  console.log(uploadResult);
-
   // Login form
   if (!isAuthenticated) {
     return (

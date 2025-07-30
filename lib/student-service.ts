@@ -439,43 +439,117 @@ export class StudentService {
 
     // Lấy danh sách wilayas
     static async getWilayas(year: number, examType: "BAC" | "BREVET"): Promise<{ [key: string]: string[] }> {
-        const students = await prisma.student.findMany({
-            where: {
-                year,
-                examType,
-                wilaya: {
-                    not: null
+        console.log(`🗺️ Getting wilayas for ${examType} ${year}`)
+
+        try {
+            // Use correct field: etablissement instead of ecole
+            const rawQuery = `
+                SELECT DISTINCT wilaya, etablissement 
+                FROM "Student" 
+                WHERE year = $1 
+                    AND "examType" = $2 
+                    AND wilaya IS NOT NULL 
+                    AND wilaya != '' 
+                    AND etablissement IS NOT NULL 
+                    AND etablissement != ''
+                ORDER BY wilaya, etablissement
+            `
+
+            console.log(`🔍 Executing query with params: year=${year}, examType=${examType}`)
+            const students = await prisma.$queryRawUnsafe(rawQuery, year, examType) as { wilaya: string; etablissement: string }[]
+
+            console.log(`📊 Found ${students.length} distinct wilaya-etablissement combinations`)
+
+            // Group etablissements by wilaya
+            const wilayaEtablissements: { [key: string]: Set<string> } = {}
+            let totalWilayas = 0
+            let totalEtablissements = 0
+
+            for (const student of students) {
+                const wilaya = student.wilaya?.trim()
+                const etablissement = student.etablissement?.trim()
+
+                // Skip if wilaya or etablissement is empty after trim
+                if (!wilaya || !etablissement) continue
+
+                if (!wilayaEtablissements[wilaya]) {
+                    wilayaEtablissements[wilaya] = new Set()
+                    totalWilayas++
                 }
-            },
-            select: {
-                wilaya: true,
-                ecole: true
-            },
-            distinct: ['wilaya', 'ecole']
-        })
 
-        // Group schools by wilaya
-        const wilayaSchools: { [key: string]: Set<string> } = {}
-        for (const student of students) {
-            const wilaya = student.wilaya!
-            const ecole = student.ecole
-
-            if (!wilayaSchools[wilaya]) {
-                wilayaSchools[wilaya] = new Set()
+                const beforeSize = wilayaEtablissements[wilaya].size
+                wilayaEtablissements[wilaya].add(etablissement)
+                if (wilayaEtablissements[wilaya].size > beforeSize) {
+                    totalEtablissements++
+                }
             }
-            wilayaSchools[wilaya].add(ecole)
+
+            // Convert Sets to sorted arrays
+            const result: { [key: string]: string[] } = {}
+            for (const [wilaya, etablissements] of Object.entries(wilayaEtablissements)) {
+                result[wilaya] = Array.from(etablissements).sort()
+            }
+
+            console.log(`🏫 Final result: ${totalWilayas} wilayas with ${totalEtablissements} total etablissements`)
+            console.log(`📍 Wilayas found: ${Object.keys(result).sort().join(', ')}`)
+
+            // Log count per wilaya for debugging
+            for (const [wilaya, etablissements] of Object.entries(result)) {
+                console.log(`   ${wilaya}: ${etablissements.length} etablissements`)
+            }
+
+            return result
+
+        } catch (error) {
+            console.error(`💥 Error in raw query, falling back to Prisma ORM:`, error)
+
+            // Fallback to original Prisma approach with etablissement
+            const students = await prisma.student.findMany({
+                where: {
+                    year,
+                    examType,
+                    wilaya: {
+                        not: null,
+                        notIn: [""]
+                    },
+                    etablissement: {
+                        notIn: [""]
+                    }
+                },
+                select: {
+                    wilaya: true,
+                    etablissement: true
+                },
+                distinct: ['wilaya', 'etablissement']
+            })
+
+            console.log(`📊 Fallback: Found ${students.length} student records with wilaya data`)
+
+            // Group etablissements by wilaya
+            const wilayaEtablissements: { [key: string]: Set<string> } = {}
+            for (const student of students) {
+                const wilaya = student.wilaya!.trim()
+                const etablissement = student.etablissement.trim()
+
+                // Skip if wilaya or etablissement is empty after trim
+                if (!wilaya || !etablissement) continue
+
+                if (!wilayaEtablissements[wilaya]) {
+                    wilayaEtablissements[wilaya] = new Set()
+                }
+                wilayaEtablissements[wilaya].add(etablissement)
+            }
+
+            // Convert Sets to sorted arrays
+            const result: { [key: string]: string[] } = {}
+            for (const [wilaya, etablissements] of Object.entries(wilayaEtablissements)) {
+                result[wilaya] = Array.from(etablissements).sort()
+            }
+
+            console.log(`🏫 Fallback result: ${Object.keys(result).length} wilayas: ${Object.keys(result).join(', ')}`)
+            return result
         }
-
-        // Convert Sets to sorted arrays
-        const result: { [key: string]: string[] } = {}
-        for (const [wilaya, schools] of Object.entries(wilayaSchools)) {
-            result[wilaya] = Array.from(schools).sort()
-        }
-
-        return result
-    }
-
-    // Upload students data
+    }    // Upload students data
     static async uploadStudents(students: Student[]): Promise<{ uploadedCount: number, errors: string[] }> {
         const errors: string[] = []
         let uploadedCount = 0

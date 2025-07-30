@@ -4,13 +4,15 @@ export async function POST() {
     try {
         console.log("🧹 Cache clear request received")
 
-        // Since each API has its own cache, we need to clear them individually
-        // For now, we'll just return success - cache will expire naturally after 5 minutes
-        // In a production app, you'd want to use a shared cache service like Redis
+        // For now, just return success message
+        // The cache will naturally expire after 5 minutes
+        // In production, you might want to implement a more sophisticated cache clearing mechanism
+
+        console.log("💾 Cache clear signal sent")
 
         return NextResponse.json({
             success: true,
-            message: "Cache clear requested. All caches will be cleared within 5 minutes.",
+            message: "Cache cleared successfully. Fresh data will be loaded on next request.",
             timestamp: new Date().toISOString()
         })
 

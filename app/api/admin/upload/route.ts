@@ -290,6 +290,20 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // Enhanced wilaya processing with validation
+        const wilayaRaw = getFieldValue(row, "wilaya", 9)
+        let wilayaValue: string | undefined = undefined
+        if (wilayaRaw !== null && wilayaRaw !== undefined && wilayaRaw !== '') {
+          wilayaValue = String(wilayaRaw).trim().replace(/^\s+|\s+$/g, '')
+          if (wilayaValue === '') {
+            wilayaValue = undefined
+          }
+          // Log wilaya processing for debugging
+          if (i <= 5) { // Log first 5 rows for debugging
+            console.log(`🎯 Row ${i + 1}: Wilaya value "${wilayaRaw}" → "${wilayaValue}" for student ${matricule}`)
+          }
+        }
+
         const student: Student = {
           matricule,
           nom_complet,
@@ -302,7 +316,7 @@ export async function POST(request: NextRequest) {
           section: examType === "BREVET"
             ? "BREVET"
             : String(getFieldValue(row, "section", 8) || "").trim(),
-          wilaya: getFieldValue(row, "wilaya", 9) ? String(getFieldValue(row, "wilaya", 9)).trim() : undefined,
+          wilaya: wilayaValue,
           rang_etablissement: getFieldValue(row, "rang_etablissement", 10) ? Number(getFieldValue(row, "rang_etablissement", 10)) : undefined,
           year,
           examType,
@@ -387,6 +401,16 @@ export async function POST(request: NextRequest) {
       const schools = [...new Set(students.map(s => s.ecole))].filter(Boolean)
       const establishments = [...new Set(students.map(s => s.etablissement))].filter(Boolean)
       const wilayas = [...new Set(students.map(s => s.wilaya))].filter(Boolean)
+
+      // Log wilaya statistics
+      console.log(`🗺️ Wilaya Statistics:`)
+      console.log(`📊 Total unique wilayas: ${wilayas.length}`)
+      console.log(`📋 Wilayas found: ${wilayas.join(', ')}`)
+
+      const studentsWithWilaya = students.filter(s => s.wilaya).length
+      const studentsWithoutWilaya = totalStudents - studentsWithWilaya
+      console.log(`✅ Students with wilaya: ${studentsWithWilaya}`)
+      console.log(`❌ Students without wilaya: ${studentsWithoutWilaya}`)
 
       // Note: Cache will be automatically cleared on next request
       console.log("🧹 Caches will be cleared on next request")

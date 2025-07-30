@@ -53,16 +53,45 @@ export async function POST(request: NextRequest) {
     console.log("📊 Cleaned headers:", headers)
 
     // Get data rows and filter out completely empty rows
-    const dataRows = jsonData.slice(1)?.filter((row) => {
-      if (!Array.isArray(row)) return false
-      return row.some((cell) => cell !== null && cell !== undefined && cell !== "")
+    console.log("🔍 Raw data before filtering:", {
+      totalRawRows: jsonData.length - 1,
+      firstFewRows: jsonData.slice(1, 4)
+    })
+    
+    const dataRows = jsonData.slice(1)?.filter((row, index) => {
+      if (!Array.isArray(row)) {
+        console.log(`⚠️ Row ${index + 1} is not an array:`, row)
+        return false
+      }
+      
+      const hasData = row.some((cell) => cell !== null && cell !== undefined && cell !== "")
+      if (!hasData) {
+        console.log(`⚠️ Row ${index + 1} is completely empty:`, row)
+      }
+      
+      return hasData
     })
 
     console.log("📊 Excel analysis:", {
-      totalRows: dataRows.length,
+      totalRawRows: jsonData.length - 1,
+      totalFilteredRows: dataRows.length,
       columns: headers.length,
       headers: headers.slice(0, 10), // Show first 10 headers
+      sampleFilteredRows: dataRows.slice(0, 3)
     })
+    
+    // Check for Oualata specifically
+    console.log("🔍 Searching for Oualata in data...")
+    const etablissementIndex = headers.findIndex(h => h?.toLowerCase().includes('etablissement'))
+    console.log(`📍 Etablissement column index: ${etablissementIndex}`)
+    
+    if (etablissementIndex >= 0) {
+      const oualataRows = dataRows.filter(row => {
+        const etablissement = (row as any[])[etablissementIndex]
+        return etablissement && String(etablissement).toLowerCase().includes('oualata')
+      })
+      console.log(`🏢 Found ${oualataRows.length} rows with Oualata:`, oualataRows.slice(0, 3))
+    }
 
     if (headers.length === 0) {
       return NextResponse.json(
@@ -84,6 +113,16 @@ export async function POST(request: NextRequest) {
       })
       return obj
     })
+
+    console.log("📋 Sample data generated:", sampleData)
+    
+    // Check if Oualata appears in sample data
+    const hasOualataInSample = sampleData.some(row => 
+      Object.values(row).some(value => 
+        value && String(value).toLowerCase().includes('oualata')
+      )
+    )
+    console.log(`🏢 Oualata in sample data: ${hasOualataInSample}`)
 
     // Define required fields based on exam type
     const requiredFields =
@@ -127,29 +166,58 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to match headers with patterns (case-insensitive and partial matching)
+    console.log("🔍 Starting pattern matching with headers:", headers)
+
     for (const [field, fieldPatterns] of Object.entries(patterns)) {
+      console.log(`🔍 Checking field: ${field} with patterns:`, fieldPatterns)
+
       for (const header of headers) {
         if (!header || typeof header !== "string") continue
 
-        const headerLower = header?.toLowerCase().trim()
+        // Clean header for better matching
+        const headerLower = header?.toLowerCase().trim().replace(/\s+/g, ' ')
+        console.log(`  📋 Checking header: "${header}" (cleaned: "${headerLower}")`)
 
         for (const pattern of fieldPatterns) {
           const patternLower = pattern?.toLowerCase()
 
-          // Exact match or contains pattern
-          if (
-            headerLower === patternLower ||
-            headerLower?.includes(patternLower) ||
-            patternLower?.includes(headerLower)
-          ) {
+          // Multiple matching strategies
+          const exactMatch = headerLower === patternLower
+          const headerContainsPattern = headerLower?.includes(patternLower)
+          const patternContainsHeader = patternLower?.includes(headerLower)
+
+          // Additional matching for space-separated words
+          const headerNoSpaces = headerLower?.replace(/\s+/g, '')
+          const patternNoSpaces = patternLower?.replace(/\s+/g, '')
+          const noSpaceMatch = headerNoSpaces?.includes(patternNoSpaces) || patternNoSpaces?.includes(headerNoSpaces)
+
+          // Word-based matching
+          const headerWords = headerLower?.split(/\s+/)
+          const patternWords = patternLower?.split(/\s+/)
+          const wordMatch = headerWords?.some(hw => patternWords?.some(pw => hw.includes(pw) || pw.includes(hw)))
+
+          console.log(`    🔍 Pattern: "${pattern}" (${patternLower})`)
+          console.log(`      - Exact match: ${exactMatch}`)
+          console.log(`      - Header contains pattern: ${headerContainsPattern}`)
+          console.log(`      - Pattern contains header: ${patternContainsHeader}`)
+          console.log(`      - No space match: ${noSpaceMatch}`)
+          console.log(`      - Word match: ${wordMatch}`)
+
+          if (exactMatch || headerContainsPattern || patternContainsHeader || noSpaceMatch || wordMatch) {
             if (!suggestedMapping[field]) {
               suggestedMapping[field] = header
-              console.log(`🎯 Matched ${field} -> ${header} (pattern: ${pattern})`)
+              console.log(`🎯 ✅ MATCHED ${field} -> ${header} (pattern: ${pattern})`)
               break
+            } else {
+              console.log(`    ⚠️ Field ${field} already mapped to: ${suggestedMapping[field]}`)
             }
           }
         }
         if (suggestedMapping[field]) break
+      }
+
+      if (!suggestedMapping[field]) {
+        console.log(`❌ No match found for field: ${field}`)
       }
     }
 
