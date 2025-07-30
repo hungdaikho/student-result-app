@@ -668,12 +668,27 @@ export default function AdminPage() {
       );
       const result = await response.json();
 
-      if (response.ok) {
-        setSelectedFile(result);
+      if (response.ok && result.success) {
+        setSelectedFile(result.file);
         setShowFileDetails(true);
+      } else {
+        console.error(
+          "Error fetching file details:",
+          result.error || "Unknown error"
+        );
+        setUploadResult({
+          success: false,
+          message:
+            result.error ||
+            "Erreur lors de la récupération des détails du fichier",
+        });
       }
     } catch (error) {
       console.error("Error fetching file details:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur réseau lors de la récupération des détails du fichier",
+      });
     }
   };
   console.log(uploadResult);

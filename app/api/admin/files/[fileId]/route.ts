@@ -59,6 +59,53 @@ export async function GET(
             distinct: ['section']
         })
 
+        // Get duplicates information
+        const duplicateGroups = await prisma.student.groupBy({
+            by: ['matricule'],
+            where: {
+                year: upload.year,
+                examType: upload.examType
+            },
+            _count: {
+                matricule: true
+            },
+            having: {
+                matricule: {
+                    _count: {
+                        gt: 1
+                    }
+                }
+            }
+        })
+
+        // Get detailed duplicate information
+        const duplicateDetails = await Promise.all(
+            duplicateGroups.slice(0, 10).map(async (group) => {
+                const students = await prisma.student.findMany({
+                    where: {
+                        matricule: group.matricule,
+                        year: upload.year,
+                        examType: upload.examType
+                    },
+                    select: {
+                        id: true,
+                        nom_complet: true,
+                        moyenne: true,
+                        ecole: true,
+                        rang: true
+                    }
+                })
+                return {
+                    matricule: group.matricule,
+                    count: group._count.matricule,
+                    students
+                }
+            })
+        )
+
+        // Calculate file size estimation
+        const estimatedSizeBytes = studentsStats._count._all * 500 // 500 bytes per student
+
         const fileDetails = {
             id: upload.id,
             fileName: upload.fileName,
@@ -73,7 +120,20 @@ export async function GET(
                 ? Number(((admittedCount / studentsStats._count._all) * 100).toFixed(1))
                 : 0,
             sections: sections.map(s => s.section).filter(Boolean),
-            status: studentsStats._count._all > 0 ? 'active' : 'no_data'
+            status: studentsStats._count._all > 0 ? 'active' : 'no_data',
+            // Add file info and duplicates for dialog
+            file: {
+                id: upload.id,
+                fileName: upload.fileName,
+                size: estimatedSizeBytes,
+                uploadedAt: upload.uploadedAt,
+                studentCount: studentsStats._count._all
+            },
+            duplicates: {
+                totalDuplicates: duplicateGroups.reduce((sum, group) => sum + (group._count.matricule - 1), 0),
+                totalGroups: duplicateGroups.length,
+                duplicateGroups: duplicateDetails
+            }
         }
 
         return NextResponse.json({
