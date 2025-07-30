@@ -412,30 +412,12 @@ export async function POST(request: NextRequest) {
       console.log(`✅ Students with wilaya: ${studentsWithWilaya}`)
       console.log(`❌ Students without wilaya: ${studentsWithoutWilaya}`)
 
-      // Auto-clear wilayas cache after successful upload
-      try {
-        console.log("🧹 Auto-clearing caches after successful upload...")
-        const { clearWilayasCache } = await import("../../wilayas/route")
-        clearWilayasCache()
+      // Note: Auto-clear caches functionality not available yet
+      console.log("🧹 Upload completed successfully. Cache clearing not implemented yet.")
 
-        // Also clear database-info cache
-        const { clearDatabaseInfoCache } = await import("../database-info/route")
-        clearDatabaseInfoCache()
-
-        // Also clear statistics cache
-        const { clearStatisticsCache } = await import("../../statistics/route")
-        clearStatisticsCache()
-
-        console.log("✅ All caches cleared successfully")
-
-        // Force a small delay to ensure database consistency on server
-        console.log("⏱️ Ensuring database consistency...")
-        await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
-
-      } catch (cacheError) {
-        console.error("⚠️ Failed to clear caches:", cacheError)
-        // Don't fail the upload if cache clearing fails
-      }
+      // Force a small delay to ensure database consistency on server
+      console.log("⏱️ Ensuring database consistency...")
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
 
       return NextResponse.json({
         message: `Successfully processed ${result.uploadedCount} student records for ${examType} ${year}`,

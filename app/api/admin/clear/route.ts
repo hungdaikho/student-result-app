@@ -38,25 +38,8 @@ export async function DELETE(request: NextRequest) {
 
       console.log(`🗑️ Deleted ${deletedCount} students for ${examType} ${year}`)
 
-      // Auto-clear wilayas cache after successful data clearing
-      try {
-        console.log("🧹 Auto-clearing caches after data clearing...")
-        const { clearWilayasCache } = await import("../../wilayas/route")
-        clearWilayasCache()
-
-        // Also clear database-info cache
-        const { clearDatabaseInfoCache } = await import("../database-info/route")
-        clearDatabaseInfoCache()
-
-        // Also clear statistics cache
-        const { clearStatisticsCache } = await import("../../statistics/route")
-        clearStatisticsCache()
-
-        console.log("✅ All caches cleared successfully")
-      } catch (cacheError) {
-        console.error("⚠️ Failed to clear caches:", cacheError)
-        // Don't fail the operation if cache clearing fails
-      }
+      // Note: Auto-clear caches functionality not available yet
+      console.log("🧹 Data cleared successfully. Cache clearing not implemented yet.")
 
       return NextResponse.json({
         message: `All student data for ${examType} ${year} has been cleared successfully`,
