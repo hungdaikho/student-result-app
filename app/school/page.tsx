@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Users, Filter, Building } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  Filter,
+  Building,
+  Trophy,
+  Medal,
+  Award,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,11 +111,25 @@ export default function SchoolPage() {
     }
   };
 
-  const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return "bg-yellow-500";
-    if (rank === 2) return "bg-gray-400";
-    if (rank === 3) return "bg-amber-600";
-    return "bg-blue-500";
+  const getRankIcon = (index: number) => {
+    if (index === 0) return <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />; // 1st place
+    if (index === 1) return <Medal className="h-3 w-3 sm:h-4 sm:w-4" />; // 2nd place
+    if (index === 2) return <Award className="h-3 w-3 sm:h-4 sm:w-4" />; // 3rd place
+    return null; // No icon for others
+  };
+
+  const getCardBackground = (index: number) => {
+    if (index === 0) return "from-yellow-50 to-yellow-100 border-yellow-300"; // 1st place
+    if (index === 1) return "from-gray-50 to-gray-100 border-gray-300"; // 2nd place
+    if (index === 2) return "from-amber-50 to-amber-100 border-amber-300"; // 3rd place
+    return "from-gray-50 to-gray-100 border-gray-200"; // Others
+  };
+
+  const getRankBadgeColor = (index: number) => {
+    if (index === 0) return "bg-yellow-500 text-white"; // 1st place - Gold
+    if (index === 1) return "bg-gray-400 text-white"; // 2nd place - Silver
+    if (index === 2) return "bg-amber-600 text-white"; // 3rd place - Bronze
+    return "bg-blue-500 text-white"; // Others
   };
 
   const getDecisionBadgeVariant = (decisionText: string) => {
@@ -333,21 +355,32 @@ export default function SchoolPage() {
               {filteredStudents.map((student, index) => (
                 <div
                   key={student.matricule}
-                  className="flex items-center justify-between p-2 sm:p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:from-gray-100 hover:to-gray-200 transition-all duration-200 shadow-sm border border-gray-200"
+                  className={`flex items-center justify-between p-2 sm:p-4 bg-gradient-to-r ${getCardBackground(
+                    index
+                  )} rounded-lg hover:scale-[1.02] transition-all duration-200 shadow-sm border ${
+                    index < 3 ? "shadow-md top-rank-shimmer" : ""
+                  } ${
+                    index === 0 ? "ring-2 ring-yellow-300 top-rank-glow" : ""
+                  }`}
                 >
                   {/* Left side - Rank and Student Info */}
                   <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                     <Badge
                       className={`${getRankBadgeColor(
-                        student.rang
-                      )} text-white text-xs flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-1`}
+                        index
+                      )} flex-shrink-0 px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-bold flex items-center gap-1`}
                     >
-                      {student.rang}
+                      {getRankIcon(index)}
+                      {index + 1}
                     </Badge>
                     <div className="min-w-0 flex-1">
                       <button
                         onClick={() => handleStudentClick(student)}
-                        className="font-semibold text-gray-900 hover:text-blue-600 hover:underline transition-colors text-left text-xs sm:text-base block w-full break-words leading-tight"
+                        className={`font-semibold hover:underline transition-colors text-left text-xs sm:text-base block w-full break-words leading-tight ${
+                          index < 3
+                            ? "text-gray-800 hover:text-blue-700 font-bold"
+                            : "text-gray-900 hover:text-blue-600"
+                        }`}
                         title={student.nom_complet}
                       >
                         {student.nom_complet}

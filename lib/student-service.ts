@@ -393,7 +393,7 @@ export class StudentService {
     static async getStudentsBySchool(ecole: string, year: number, examType: "BAC" | "BREVET") {
         const students = await prisma.student.findMany({
             where: {
-                ecole,
+                etablissement: ecole,
                 year,
                 examType
             },
@@ -449,27 +449,27 @@ export class StudentService {
             },
             select: {
                 wilaya: true,
-                ecole: true
+                etablissement: true
             },
-            distinct: ['wilaya', 'ecole']
+            distinct: ['wilaya', 'etablissement']
         })
 
-        // Group schools by wilaya
-        const wilayaSchools: { [key: string]: Set<string> } = {}
+        // Group establishments by wilaya
+        const wilayaEstablishments: { [key: string]: Set<string> } = {}
         for (const student of students) {
             const wilaya = student.wilaya!
-            const ecole = student.ecole
+            const etablissement = student.etablissement
 
-            if (!wilayaSchools[wilaya]) {
-                wilayaSchools[wilaya] = new Set()
+            if (!wilayaEstablishments[wilaya]) {
+                wilayaEstablishments[wilaya] = new Set()
             }
-            wilayaSchools[wilaya].add(ecole)
+            wilayaEstablishments[wilaya].add(etablissement)
         }
 
         // Convert Sets to sorted arrays
         const result: { [key: string]: string[] } = {}
-        for (const [wilaya, schools] of Object.entries(wilayaSchools)) {
-            result[wilaya] = Array.from(schools).sort()
+        for (const [wilaya, establishments] of Object.entries(wilayaEstablishments)) {
+            result[wilaya] = Array.from(establishments).sort()
         }
 
         return result
@@ -481,8 +481,6 @@ export class StudentService {
         let uploadedCount = 0
 
         try {
-            console.log(`[StudentService] Starting upload of ${students.length} students`)
-
             // Create a transaction with timeout
             const result = await prisma.$transaction(async (tx) => {
                 const BATCH_SIZE = 500 // Process in smaller batches for better performance

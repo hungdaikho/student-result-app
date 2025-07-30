@@ -167,14 +167,22 @@ button:focus {
 
 /* Professional hover effects for cards and interactive elements */
 .hover\:from-gray-100:hover {
-  background: linear-gradient(to right, rgb(243 244 246), rgb(229 231 235)) !important;
+  background: linear-gradient(
+    to right,
+    rgb(243 244 246),
+    rgb(229 231 235)
+  ) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease-in-out;
 }
 
 .hover\:from-blue-50:hover {
-  background: linear-gradient(to right, rgb(239 246 255), rgb(219 234 254)) !important;
+  background: linear-gradient(
+    to right,
+    rgb(239 246 255),
+    rgb(219 234 254)
+  ) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
   transition: all 0.2s ease-in-out;
@@ -245,4 +253,49 @@ button:active {
   background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
   transform: scale(1.05);
   transition: all 0.2s ease-in-out;
+}
+
+/* Top ranking animations */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Top 3 special effects */
+.top-rank-glow {
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+}
+
+.top-rank-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.top-rank-shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.top-rank-shimmer:hover::before {
+  left: 100%;
 }
