@@ -412,8 +412,16 @@ export async function POST(request: NextRequest) {
       console.log(`✅ Students with wilaya: ${studentsWithWilaya}`)
       console.log(`❌ Students without wilaya: ${studentsWithoutWilaya}`)
 
-      // Note: Cache will be automatically cleared on next request
-      console.log("🧹 Caches will be cleared on next request")
+      // Auto-clear wilayas cache after successful upload
+      try {
+        console.log("🧹 Auto-clearing wilayas cache after successful upload...")
+        const { clearWilayasCache } = await import("../../wilayas/route")
+        clearWilayasCache()
+        console.log("✅ Wilayas cache cleared successfully")
+      } catch (cacheError) {
+        console.error("⚠️ Failed to clear wilayas cache:", cacheError)
+        // Don't fail the upload if cache clearing fails
+      }
 
       return NextResponse.json({
         message: `Successfully processed ${result.uploadedCount} student records for ${examType} ${year}`,
