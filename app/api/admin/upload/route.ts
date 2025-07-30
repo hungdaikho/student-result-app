@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Buffer } from "buffer"
 import { StudentService } from "@/lib/student-service"
+import { isStudentAdmittedFromDecision, normalizeDecisionText } from "@/lib/decision-utils"
 
 interface Student {
   matricule: string
@@ -18,6 +19,23 @@ interface Student {
   examType: "BAC" | "BREVET"
   lieu_nais?: string
   date_naiss?: string
+}
+
+// Helper function to determine if student is admitted based on decision text only
+// This function implements comprehensive logic to process the Decision column
+// and automatically determine the admission status (admis) of students
+function isStudentAdmitted(decisionText: string): boolean {
+  console.log(`🔍 Processing decision: "${decisionText}" → "${normalizeDecisionText(decisionText)}"`)
+
+  const result = isStudentAdmittedFromDecision(decisionText)
+
+  if (result) {
+    console.log(`✅ Student ADMITTED based on decision: "${normalizeDecisionText(decisionText)}"`)
+  } else {
+    console.log(`❌ Student NOT ADMITTED based on decision: "${normalizeDecisionText(decisionText)}"`)
+  }
+
+  return result
 }
 
 // Force dynamic rendering for this API route
@@ -188,6 +206,9 @@ export async function POST(request: NextRequest) {
         }
         seenMatricules.add(matricule)
 
+        // Calculate admis using helper function based on decision text only
+        const decisionText = String(getFieldValue(row, "decision", 7) || "").trim()
+
         const student: Student = {
           matricule,
           nom_complet,
@@ -195,8 +216,8 @@ export async function POST(request: NextRequest) {
           etablissement: String(getFieldValue(row, "etablissement", 3) || "").trim(),
           moyenne: Number(getFieldValue(row, "moyenne", 4)) || 0,
           rang: Number(getFieldValue(row, "rang", 5)) || 0,
-          admis: Boolean(getFieldValue(row, "admis", 6)) || false,
-          decision_text: String(getFieldValue(row, "decision", 7) || "").trim(),
+          admis: isStudentAdmitted(decisionText),
+          decision_text: decisionText,
           section: examType === "BREVET"
             ? "BREVET"
             : String(getFieldValue(row, "section", 8) || "").trim(),

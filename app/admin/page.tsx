@@ -593,6 +593,99 @@ export default function AdminPage() {
     }
   };
 
+  const debugAdmisLogic = async () => {
+    try {
+      setUploadResult({
+        success: true,
+        message: "Analyse de la logique admis en cours...",
+      });
+
+      const response = await fetch(
+        `/api/admin/debug-admis?year=${selectedYear}&examType=${selectedExamType}&limit=100`
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadResult({
+          success: true,
+          message: `Analyse terminée: ${result.summary.inconsistentRecords} enregistrements incohérents sur ${result.summary.totalStudents}`,
+          details: result,
+        });
+      } else {
+        setUploadResult({
+          success: false,
+          message: result.error || "Échec de l'analyse de la logique admis",
+        });
+      }
+    } catch (error) {
+      console.error("Debug admis error:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur réseau lors de l'analyse de la logique admis",
+      });
+    }
+  };
+
+  const fixAdmisLogic = async (dryRun = true) => {
+    if (
+      !dryRun &&
+      !confirm(
+        `Êtes-vous sûr de vouloir corriger la logique admis pour ${selectedExamType} ${selectedYear} ? Cela mettra à jour les valeurs admis basées sur decision_text.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUploadResult({
+        success: true,
+        message: dryRun
+          ? "Test de correction en cours..."
+          : "Correction de la logique admis en cours...",
+      });
+
+      const response = await fetch("/api/admin/fix-admis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          year: selectedYear,
+          examType: selectedExamType,
+          dryRun,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadResult({
+          success: true,
+          message: dryRun
+            ? `Test terminé: ${result.report.incorrectRecords} enregistrements à corriger sur ${result.report.totalStudents}`
+            : result.message,
+          details: result,
+        });
+
+        if (!dryRun) {
+          // Refresh database info after fixing
+          getDatabaseInfo();
+        }
+      } else {
+        setUploadResult({
+          success: false,
+          message: result.error || "Échec de la correction de la logique admis",
+        });
+      }
+    } catch (error) {
+      console.error("Fix admis error:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur réseau lors de la correction de la logique admis",
+      });
+    }
+  };
+
   const resetToUpload = () => {
     setCurrentStep("upload");
     setExcelAnalysis(null);
@@ -626,6 +719,8 @@ export default function AdminPage() {
 
     setDeletingFile(fileId);
     try {
+      console.log("🗑️ Attempting to delete file:", fileId);
+
       const response = await fetch(
         `/api/admin/files/${encodeURIComponent(fileId)}`,
         {
@@ -633,9 +728,12 @@ export default function AdminPage() {
         }
       );
 
-      const result = await response.json();
+      console.log("🗑️ Delete response status:", response.status);
 
-      if (response.ok) {
+      const result = await response.json();
+      console.log("🗑️ Delete response:", result);
+
+      if (response.ok && result.success) {
         setUploadResult({
           success: true,
           message: result.message,
@@ -645,6 +743,7 @@ export default function AdminPage() {
         getFiles();
         getDatabaseInfo();
       } else {
+        console.error("Delete failed:", result);
         setUploadResult({
           success: false,
           message: result.error || "Échec de la suppression du fichier",
@@ -1757,42 +1856,80 @@ export default function AdminPage() {
                     />
                   </div>
 
-                  {/* Analyze Button */}
-                  <div className="flex gap-4">
-                    <Button
-                      onClick={handleAnalyzeFile}
-                      disabled={!file || analyzing}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {analyzing ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Analyse en cours...
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Analyser le fichier Excel
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={clearData}
-                      variant="destructive"
-                      disabled={analyzing}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Effacer {selectedExamType} {selectedYear}
-                    </Button>
-                    <Button
-                      onClick={recalculateRanks}
-                      variant="outline"
-                      disabled={analyzing}
-                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Recalculer Rangs {selectedExamType} {selectedYear}
-                    </Button>
+                  {/* Action Buttons - Organized in Groups */}
+                  <div className="space-y-4">
+                    {/* Primary Actions */}
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={handleAnalyzeFile}
+                        disabled={!file || analyzing}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {analyzing ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Analyse en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Analyser le fichier Excel
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={clearData}
+                        variant="destructive"
+                        disabled={analyzing}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Effacer {selectedExamType} {selectedYear}
+                      </Button>
+                    </div>
+
+                    {/* Secondary Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Button
+                        onClick={recalculateRanks}
+                        variant="outline"
+                        disabled={analyzing}
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Recalculer Rangs {selectedExamType} {selectedYear}
+                      </Button>
+                      <Button
+                        onClick={debugAdmisLogic}
+                        variant="outline"
+                        disabled={analyzing}
+                        className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                      >
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        Analyser Logique Admis
+                      </Button>
+                    </div>
+
+                    {/* Debug/Fix Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Button
+                        onClick={() => fixAdmisLogic(true)}
+                        variant="outline"
+                        disabled={analyzing}
+                        className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Test Correction Admis
+                      </Button>
+                      <Button
+                        onClick={() => fixAdmisLogic(false)}
+                        variant="outline"
+                        disabled={analyzing}
+                        className="border-green-300 text-green-600 hover:bg-green-50"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Corriger Logique Admis
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}

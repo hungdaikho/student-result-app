@@ -125,7 +125,7 @@ export default function HomePage() {
   const [searchMatricule, setSearchMatricule] = useState("");
   const [selectedWilaya, setSelectedWilaya] = useState("");
   const [selectedEstablishment, setSelectedEstablishment] = useState("");
-  const [leaderboard, setLeaderboard] = useState<LeaderboardData>({});
+  const [leaderboard, setLeaderboard] = useState<LeaderboardData | any>({});
   const [wilayaData, setWilayaData] = useState<WilayaData>({});
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -282,8 +282,9 @@ export default function HomePage() {
               return (
                 mappedSection === sectionCode &&
                 data[section] &&
-                Array.isArray(data[section]) &&
-                data[section].length > 0
+                data[section].students &&
+                Array.isArray(data[section].students) &&
+                data[section].students.length > 0
               );
             });
           });
@@ -295,7 +296,14 @@ export default function HomePage() {
               return mappedSection === sectionCode;
             });
             if (matchingSection && data[matchingSection]) {
-              filteredData[matchingSection] = data[matchingSection];
+              // Extract students array for compatibility with existing UI
+              filteredData[matchingSection] =
+                data[matchingSection].students || [];
+              // Store stats for later use
+              if (data[matchingSection].stats) {
+                filteredData[`${matchingSection}_stats`] =
+                  data[matchingSection].stats;
+              }
             }
           });
 
@@ -307,10 +315,14 @@ export default function HomePage() {
               section !== "Sciences" &&
               section !== "sn" &&
               data[section] &&
-              Array.isArray(data[section]) &&
-              data[section].length > 0
+              data[section].students &&
+              Array.isArray(data[section].students) &&
+              data[section].students.length > 0
             ) {
-              filteredData[section] = data[section];
+              filteredData[section] = data[section].students || [];
+              if (data[section].stats) {
+                filteredData[`${section}_stats`] = data[section].stats;
+              }
             }
           });
 
@@ -940,10 +952,35 @@ export default function HomePage() {
                 {selectedExamType === "BAC" && availableSections.length > 1 && (
                   <div className="flex items-center justify-center mb-4">
                     <div className="bg-white rounded-lg shadow-lg px-3 sm:px-4 py-2 border border-blue-200">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <div className="text-xs sm:text-base font-semibold text-blue-600">
                           {getSectionDisplayName(currentSection)}
                         </div>
+                        {/* Section Stats */}
+                        {leaderboard[`${currentSection}_stats`] && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge
+                              variant="outline"
+                              className="bg-green-50 text-green-700 border-green-300"
+                            >
+                              Moy:{" "}
+                              {leaderboard[`${currentSection}_stats`] &&
+                                leaderboard[`${currentSection}_stats`]
+                                  ?.averageScore}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-300"
+                            >
+                              Réussite:{" "}
+                              {
+                                leaderboard[`${currentSection}_stats`]
+                                  .admissionRate
+                              }
+                              %
+                            </Badge>
+                          </div>
+                        )}
                         <div className="flex gap-1">
                           {availableSections.map((_, index) => (
                             <button

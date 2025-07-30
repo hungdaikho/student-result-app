@@ -143,20 +143,20 @@ export class StudentService {
         }
     }
 
-    // Lấy leaderboard
+    // Lấy leaderboard  
+    // For BAC: returns object grouped by sections with top 10 each
+    // For BREVET: returns array of top 10 students (Top 10 Mauritanie)
     static async getLeaderboard(year: number, examType: "BAC" | "BREVET", limit: number = 100) {
         if (examType === "BAC") {
-            // For BAC: return object grouped by sections
+            // For BAC: return object grouped by sections with top 10 each and section stats
             const students = await prisma.student.findMany({
                 where: {
                     year,
-                    examType,
-                    admis: true
+                    examType
                 },
                 orderBy: {
                     rang: 'asc'
                 },
-                take: limit * 10, // Get more to distribute across sections
                 select: {
                     matricule: true,
                     nom_complet: true,
@@ -164,59 +164,96 @@ export class StudentService {
                     moyenne: true,
                     rang: true,
                     wilaya: true,
-                    section: true
+                    section: true,
+                    admis: true
                 }
             })
 
-            // Group by section
-            const grouped: { [key: string]: any[] } = {}
+            // Group by section and calculate stats
+            const grouped: { [key: string]: any } = {}
+            const sectionStats: { [key: string]: { total: number, admitted: number, totalScore: number } } = {}
+
             for (const student of students) {
                 const section = student.section || 'Other'
+
+                // Initialize section stats
+                if (!sectionStats[section]) {
+                    sectionStats[section] = { total: 0, admitted: 0, totalScore: 0 }
+                }
+                sectionStats[section].total++
+                sectionStats[section].totalScore += student.moyenne
+                if (student.admis) {
+                    sectionStats[section].admitted++
+                }
+
+                // Initialize section array
                 if (!grouped[section]) {
                     grouped[section] = []
                 }
-                if (grouped[section].length < 50) { // Max 50 per section
+
+                // Only add top 10 students per section
+                if (grouped[section].length < 10) {
                     grouped[section].push({
                         matricule: student.matricule,
                         nom_complet: student.nom_complet,
+                        ecole: student.ecole,
                         moyenne: student.moyenne,
                         rang: student.rang,
-                        ecole: student.ecole,
-                        wilaya: student.wilaya || undefined
+                        wilaya: student.wilaya,
+                        section: student.section,
+                        admis: student.admis
                     })
                 }
             }
 
-            return grouped
+            // Add section statistics to each section
+            const result: { [key: string]: any } = {}
+            for (const [section, students] of Object.entries(grouped)) {
+                const stats = sectionStats[section]
+                result[section] = {
+                    students: students,
+                    stats: {
+                        total: stats.total,
+                        admitted: stats.admitted,
+                        admissionRate: stats.total > 0 ? Number(((stats.admitted / stats.total) * 100).toFixed(1)) : 0,
+                        averageScore: stats.total > 0 ? Number((stats.totalScore / stats.total).toFixed(2)) : 0
+                    }
+                }
+            }
+
+            return result
         } else {
-            // For BREVET: return array of top students
+            // For BREVET: return array of top 10 students only
             const students = await prisma.student.findMany({
                 where: {
                     year,
-                    examType,
-                    admis: true
+                    examType
                 },
                 orderBy: {
                     rang: 'asc'
                 },
-                take: limit,
+                take: 10, // Always limit to top 10 for BREVET
                 select: {
                     matricule: true,
                     nom_complet: true,
                     ecole: true,
                     moyenne: true,
                     rang: true,
-                    wilaya: true
+                    wilaya: true,
+                    section: true,
+                    admis: true
                 }
             })
 
             return students.map(student => ({
                 matricule: student.matricule,
                 nom_complet: student.nom_complet,
+                ecole: student.ecole,
                 moyenne: student.moyenne,
                 rang: student.rang,
-                ecole: student.ecole,
-                wilaya: student.wilaya || undefined
+                wilaya: student.wilaya || undefined,
+                section: student.section,
+                admis: student.admis
             }))
         }
     }
