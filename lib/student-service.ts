@@ -1,0 +1,503 @@
+import { prisma } from './prisma'
+import { Student, DataUpload, StatisticsData, LeaderboardStudent } from '../types/student'
+import { Student as PrismaStudent } from '@prisma/client'
+
+// Helper để convert từ Prisma type sang interface type
+function convertPrismaStudent(prismaStudent: PrismaStudent): Student {
+    return {
+        ...prismaStudent,
+        wilaya: prismaStudent.wilaya || undefined,
+        rang_etablissement: prismaStudent.rang_etablissement || undefined,
+        lieu_nais: prismaStudent.lieu_nais || undefined,
+        date_naiss: prismaStudent.date_naiss || undefined,
+    }
+}
+
+export class StudentService {
+    // Tìm học sinh theo matricule
+    static async findStudentByMatricule(matricule: string, year: number, examType: "BAC" | "BREVET"): Promise<Student | null> {
+        const student = await prisma.student.findUnique({
+            where: {
+                matricule_year_examType: {
+                    matricule,
+                    year,
+                    examType
+                }
+            }
+        })
+
+        if (!student) return null
+        return convertPrismaStudent(student)
+    }
+
+    // Lấy tất cả học sinh theo năm và loại thi
+    static async getStudents(year?: number, examType?: "BAC" | "BREVET"): Promise<Student[]> {
+        const where: any = {}
+
+        if (year) where.year = year
+        if (examType) where.examType = examType
+
+        const students = await prisma.student.findMany({
+            where,
+            orderBy: {
+                rang: 'asc'
+            }
+        })
+
+        return students.map(convertPrismaStudent)
+    }
+
+    // Xóa dữ liệu theo năm và loại thi
+    static async clearData(year: number, examType: "BAC" | "BREVET"): Promise<number> {
+        const result = await prisma.$transaction(async (tx) => {
+            const deleteResult = await tx.student.deleteMany({
+                where: {
+                    year,
+                    examType
+                }
+            })
+
+            await tx.dataUpload.deleteMany({
+                where: {
+                    year,
+                    examType
+                }
+            })
+
+            return deleteResult.count
+        })
+
+        return result
+    }
+
+    // Lấy thống kê
+    static async getStatistics(year: number, examType: "BAC" | "BREVET"): Promise<StatisticsData> {
+        const students = await prisma.student.findMany({
+            where: {
+                year,
+                examType
+            }
+        })
+
+        const totalStudents = students.length
+        const admittedStudents = students?.filter(s => s.admis).length
+        const admissionRate = totalStudents > 0 ? ((admittedStudents / totalStudents) * 100).toFixed(1) : "0.0"
+
+        // Calculate sessionnaireRate (example: students with moyenne >= 10 but < passing grade)
+        const sessionnaireStudents = students?.filter(s => !s.admis && s.moyenne >= 8).length
+        const sessionnaireRate = totalStudents > 0 ? ((sessionnaireStudents / totalStudents) * 100).toFixed(1) : "0.0"
+
+        const averageScore = totalStudents > 0 ?
+            (students.reduce((sum, s) => sum + s.moyenne, 0) / totalStudents).toFixed(2) : "0.00"
+
+        // Section statistics
+        const sectionStats = students.reduce((acc, student) => {
+            const section = student.section || 'Non spécifié'
+            if (!acc[section]) {
+                acc[section] = { total: 0, admitted: 0 }
+            }
+            acc[section].total++
+            if (student.admis) acc[section].admitted++
+            return acc
+        }, {} as Record<string, { total: number, admitted: number }>)
+
+        const sectionStatsArray = Object.entries(sectionStats)
+            .map(([name, stats]) => ({
+                name,
+                total: stats.total,
+                admitted: stats.admitted,
+                rate: stats.total > 0 ? ((stats.admitted / stats.total) * 100).toFixed(1) : "0.0"
+            }))
+            ?.sort((a, b) => b.total - a.total)
+
+        // Wilaya statistics
+        const wilayaStats = students.reduce((acc, student) => {
+            const wilaya = student.wilaya || 'Non spécifié'
+            if (!acc[wilaya]) {
+                acc[wilaya] = { total: 0, admitted: 0 }
+            }
+            acc[wilaya].total++
+            if (student.admis) acc[wilaya].admitted++
+            return acc
+        }, {} as Record<string, { total: number, admitted: number }>)
+
+        const wilayaStatsArray = Object.entries(wilayaStats)
+            .map(([name, stats]) => ({
+                name,
+                total: stats.total,
+                admitted: stats.admitted,
+                rate: stats.total > 0 ? ((stats.admitted / stats.total) * 100).toFixed(1) : "0.0"
+            }))
+            ?.sort((a, b) => b.total - a.total)
+
+        return {
+            totalStudents,
+            admittedStudents,
+            admissionRate,
+            sessionnaireRate,
+            averageScore,
+            sectionStats: sectionStatsArray,
+            wilayaStats: wilayaStatsArray,
+            year,
+            examType
+        }
+    }
+
+    // Lấy leaderboard
+    static async getLeaderboard(year: number, examType: "BAC" | "BREVET", limit: number = 100) {
+        if (examType === "BAC") {
+            // For BAC: return object grouped by sections
+            const students = await prisma.student.findMany({
+                where: {
+                    year,
+                    examType,
+                    admis: true
+                },
+                orderBy: {
+                    rang: 'asc'
+                },
+                take: limit * 10, // Get more to distribute across sections
+                select: {
+                    matricule: true,
+                    nom_complet: true,
+                    ecole: true,
+                    moyenne: true,
+                    rang: true,
+                    wilaya: true,
+                    section: true
+                }
+            })
+
+            // Group by section
+            const grouped: { [key: string]: any[] } = {}
+            for (const student of students) {
+                const section = student.section || 'Other'
+                if (!grouped[section]) {
+                    grouped[section] = []
+                }
+                if (grouped[section].length < 50) { // Max 50 per section
+                    grouped[section].push({
+                        matricule: student.matricule,
+                        nom_complet: student.nom_complet,
+                        moyenne: student.moyenne,
+                        rang: student.rang,
+                        ecole: student.ecole,
+                        wilaya: student.wilaya || undefined
+                    })
+                }
+            }
+
+            return grouped
+        } else {
+            // For BREVET: return array of top students
+            const students = await prisma.student.findMany({
+                where: {
+                    year,
+                    examType,
+                    admis: true
+                },
+                orderBy: {
+                    rang: 'asc'
+                },
+                take: limit,
+                select: {
+                    matricule: true,
+                    nom_complet: true,
+                    ecole: true,
+                    moyenne: true,
+                    rang: true,
+                    wilaya: true
+                }
+            })
+
+            return students.map(student => ({
+                matricule: student.matricule,
+                nom_complet: student.nom_complet,
+                moyenne: student.moyenne,
+                rang: student.rang,
+                ecole: student.ecole,
+                wilaya: student.wilaya || undefined
+            }))
+        }
+    }
+
+    // Lấy học sinh theo wilaya
+    static async getStudentsByWilaya(wilaya: string, year: number, examType: "BAC" | "BREVET"): Promise<Student[]> {
+        const students = await prisma.student.findMany({
+            where: {
+                wilaya,
+                year,
+                examType
+            },
+            orderBy: {
+                rang: 'asc'
+            }
+        })
+
+        return students.map(convertPrismaStudent)
+    }
+
+    // Lấy học sinh theo wilaya với pagination
+    static async getStudentsByWilayaPaginated(wilaya: string, year: number, examType: "BAC" | "BREVET", page: number, limit: number, section: string) {
+        const offset = (page - 1) * limit
+
+        // Build where condition
+        const whereCondition: any = {
+            wilaya,
+            year,
+            examType
+        }
+
+        if (section !== "all") {
+            whereCondition.section = section
+        }
+
+        // Get total count
+        const totalCount = await prisma.student.count({
+            where: whereCondition
+        })
+
+        // Get students with pagination
+        const students = await prisma.student.findMany({
+            where: whereCondition,
+            orderBy: {
+                rang: 'asc'
+            },
+            skip: offset,
+            take: limit,
+            select: {
+                matricule: true,
+                nom_complet: true,
+                moyenne: true,
+                rang: true,
+                admis: true,
+                section: true,
+                ecole: true,
+                etablissement: true
+            }
+        })
+
+        // Get statistics
+        const allStudents = await prisma.student.findMany({
+            where: {
+                wilaya,
+                year,
+                examType
+            },
+            select: {
+                admis: true,
+                moyenne: true,
+                section: true
+            }
+        })
+
+        const admittedCount = allStudents.filter(s => s.admis).length
+        const averageScore = allStudents.length > 0
+            ? (allStudents.reduce((sum, s) => sum + s.moyenne, 0) / allStudents.length)
+            : 0
+
+        // Get unique sections
+        const sections = [...new Set(allStudents.map(s => s.section))].sort()
+
+        const totalPages = Math.ceil(totalCount / limit)
+
+        return {
+            students: students.map(student => ({
+                matricule: student.matricule,
+                nom_complet: student.nom_complet,
+                moyenne: student.moyenne,
+                rang: student.rang,
+                admis: student.admis,
+                section: student.section,
+                ecole: student.ecole,
+                etablissement: student.etablissement
+            })),
+            totalCount,
+            totalPages,
+            currentPage: page,
+            admittedCount,
+            averageScore: Number(averageScore.toFixed(2)),
+            sections
+        }
+    }
+
+    // Lấy học sinh theo école
+    static async getStudentsBySchool(ecole: string, year: number, examType: "BAC" | "BREVET") {
+        const students = await prisma.student.findMany({
+            where: {
+                ecole,
+                year,
+                examType
+            },
+            orderBy: {
+                rang: 'asc'
+            },
+            select: {
+                matricule: true,
+                nom_complet: true,
+                moyenne: true,
+                rang: true,
+                rang_etablissement: true,
+                admis: true,
+                decision_text: true,
+                section: true,
+                wilaya: true
+            }
+        })
+
+        return students.map(student => ({
+            matricule: student.matricule,
+            nom_complet: student.nom_complet,
+            moyenne: student.moyenne,
+            rang: student.rang,
+            rang_etablissement: student.rang_etablissement || undefined,
+            admis: student.admis,
+            decision_text: student.decision_text,
+            section: student.section,
+            wilaya: student.wilaya || undefined
+        }))
+    }
+
+    // Lấy danh sách các upload
+    static async getUploadHistory(): Promise<DataUpload[]> {
+        const uploads = await prisma.dataUpload.findMany({
+            orderBy: {
+                uploadedAt: 'desc'
+            }
+        })
+
+        return uploads
+    }
+
+    // Lấy danh sách wilayas
+    static async getWilayas(year: number, examType: "BAC" | "BREVET"): Promise<{ [key: string]: string[] }> {
+        const students = await prisma.student.findMany({
+            where: {
+                year,
+                examType,
+                wilaya: {
+                    not: null
+                }
+            },
+            select: {
+                wilaya: true,
+                ecole: true
+            },
+            distinct: ['wilaya', 'ecole']
+        })
+
+        // Group schools by wilaya
+        const wilayaSchools: { [key: string]: Set<string> } = {}
+        for (const student of students) {
+            const wilaya = student.wilaya!
+            const ecole = student.ecole
+
+            if (!wilayaSchools[wilaya]) {
+                wilayaSchools[wilaya] = new Set()
+            }
+            wilayaSchools[wilaya].add(ecole)
+        }
+
+        // Convert Sets to sorted arrays
+        const result: { [key: string]: string[] } = {}
+        for (const [wilaya, schools] of Object.entries(wilayaSchools)) {
+            result[wilaya] = Array.from(schools).sort()
+        }
+
+        return result
+    }
+
+    // Upload students data
+    static async uploadStudents(students: Student[]): Promise<{ uploadedCount: number, errors: string[] }> {
+        const errors: string[] = []
+        let uploadedCount = 0
+
+        try {
+            console.log(`[StudentService] Starting upload of ${students.length} students`)
+
+            // Create a transaction with timeout
+            const result = await prisma.$transaction(async (tx) => {
+                const BATCH_SIZE = 500 // Process in smaller batches for better performance
+
+                for (let i = 0; i < students.length; i += BATCH_SIZE) {
+                    const batch = students.slice(i, i + BATCH_SIZE)
+                    console.log(`[StudentService] Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(students.length / BATCH_SIZE)}`)
+
+                    try {
+                        // Try createMany first (fastest for new records)
+                        await tx.student.createMany({
+                            data: batch,
+                            skipDuplicates: true
+                        })
+                        uploadedCount += batch.length
+                        console.log(`[StudentService] Batch createMany successful for ${batch.length} students`)
+                    } catch (error) {
+                        console.log(`[StudentService] CreateMany failed, falling back to individual upserts for batch`)
+
+                        // Fallback to individual upserts for duplicates
+                        for (const student of batch) {
+                            try {
+                                await tx.student.upsert({
+                                    where: {
+                                        matricule_year_examType: {
+                                            matricule: student.matricule,
+                                            year: student.year,
+                                            examType: student.examType
+                                        }
+                                    },
+                                    update: student,
+                                    create: student
+                                })
+                                uploadedCount++
+                            } catch (upsertError: any) {
+                                const errorMsg = `Failed to upsert student ${student.matricule}: ${upsertError.message}`
+                                console.error(errorMsg)
+                                errors.push(errorMsg)
+                            }
+                        }
+                    }
+                }
+
+                return { uploadedCount, errors }
+            }, {
+                timeout: 300000, // 5 minutes timeout
+                maxWait: 10000   // Wait up to 10 seconds to start
+            })
+
+            console.log(`[StudentService] Upload completed. Success: ${result.uploadedCount}, Errors: ${result.errors.length}`)
+            return result
+
+        } catch (error: any) {
+            console.error(`[StudentService] Transaction failed:`, error)
+            throw new Error(`Database transaction failed: ${error.message}`)
+        }
+    }
+
+    // Save upload info
+    static async saveUploadInfo(year: number, examType: "BAC" | "BREVET", fileName: string, studentCount: number): Promise<void> {
+        try {
+            await prisma.dataUpload.upsert({
+                where: {
+                    year_examType: {
+                        year,
+                        examType
+                    }
+                },
+                update: {
+                    fileName,
+                    studentCount,
+                    uploadedAt: new Date()
+                },
+                create: {
+                    year,
+                    examType,
+                    fileName,
+                    studentCount
+                }
+            })
+        } catch (error: any) {
+            console.error(`[StudentService] Failed to save upload info:`, error)
+            throw new Error(`Failed to save upload info: ${error.message}`)
+        }
+    }
+}

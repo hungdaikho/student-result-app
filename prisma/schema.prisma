@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id                  String   @id @default(cuid())
+  matricule           String   // Removed @unique here since we have composite unique below
+  nom_complet         String
+  ecole               String
+  etablissement       String
+  moyenne             Float
+  rang                Int
+  admis               Boolean
+  decision_text       String
+  section             String
+  wilaya              String?
+  rang_etablissement  Int?
+  year                Int
+  examType            ExamType
+  lieu_nais           String?
+  date_naiss          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([matricule, year, examType])
+  @@index([year, examType])
+  @@index([wilaya])
+  @@index([ecole])
+  @@index([etablissement])
+  @@index([rang])
+  @@map("students")
+}
+
+model DataUpload {
+  id            String   @id @default(cuid())
+  year          Int
+  examType      ExamType
+  fileName      String
+  studentCount  Int
+  uploadedAt    DateTime @default(now())
+  
+  @@unique([year, examType])
+  @@map("data_uploads")
+}
+
+enum ExamType {
+  BAC
+  BREVET
+}
