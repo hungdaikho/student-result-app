@@ -204,7 +204,6 @@ export default function WilayaPage() {
   const currentUrl = `/wilaya?name=${encodeURIComponent(
     wilayaName || ""
   )}&year=${year}&examType=${examType}&page=${currentPage}&section=${selectedSection}`;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -396,20 +395,14 @@ export default function WilayaPage() {
 
                     {/* Right side - Score and Decision - CENTERED */}
                     <div className="text-right flex-shrink-0 ml-2 flex flex-col items-center">
-                      <p className="font-bold text-sm sm:text-lg text-blue-600 mb-1">
+                      <p className="font-bold text-sm sm:text-lg text-blue-600">
                         {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}
                       </p>
                       <Badge
-                        variant={getDecisionBadgeVariant(student.decision_text)}
-                        className={`text-xs ${
-                          student.decision_text
-                            ?.toLowerCase()
-                            ?.includes("sessionnaire")
-                            ? "badge-sessionnaire"
-                            : ""
-                        }`}
+                        variant={student.admis ? "default" : "destructive"}
+                        className="text-xs mt-1"
                       >
-                        {student.decision_text}
+                        {student.admis ? "Admis Sn" : "Ajourné Sn"}
                       </Badge>
                     </div>
                   </div>

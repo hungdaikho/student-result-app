@@ -32,6 +32,21 @@ interface Student {
   examType?: "BAC" | "BREVET";
 }
 
+interface Rankings {
+  matricule: string;
+  moyenne: number;
+  section?: string;
+  etablissement: string;
+  // For BAC
+  sectionRank?: number;
+  totalInSection?: number;
+  schoolRank?: number;
+  totalInSchool?: number;
+  // For BREVET
+  generalRank?: number;
+  totalStudents?: number;
+}
+
 // Add request cache to avoid duplicate API calls
 const requestCache = new Map<string, Promise<any>>();
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
@@ -61,6 +76,7 @@ function getCachedRequest(url: string): Promise<any> {
 
 export default function ResultsPage() {
   const [student, setStudent] = useState<Student | null>(null);
+  const [rankings, setRankings] = useState<Rankings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
@@ -96,16 +112,23 @@ export default function ResultsPage() {
   const fetchStudentResult = async (matricule: string) => {
     try {
       setLoading(true);
-      const url = `/api/search?matricule=${encodeURIComponent(
+      const studentUrl = `/api/search?matricule=${encodeURIComponent(
         matricule
       )}&year=${year}&examType=${examType}`;
 
-      // Use cached request
-      const data = await getCachedRequest(url);
-      setStudent(data);
+      // Fetch student data
+      const studentData = await getCachedRequest(studentUrl);
+      setStudent(studentData);
+
+      // Fetch rankings
+      const rankingUrl = `/api/ranking?matricule=${encodeURIComponent(
+        matricule
+      )}&year=${year}&examType=${examType}`;
+      const rankingData = await getCachedRequest(rankingUrl);
+      setRankings(rankingData);
 
       // Show celebration animation if student is admitted (for both BAC and BREVET)
-      if (data.admis) {
+      if (studentData.admis) {
         setTimeout(() => setShowCelebration(true), 800);
       }
       setError("");
@@ -374,6 +397,82 @@ export default function ResultsPage() {
                 </button>
               </CardContent>
             </Card>
+
+            {/* Ranking Cards */}
+            {rankings && examType === "BAC" ? (
+              // For BAC - Show both section ranking and school ranking
+              <>
+                {/* Section Ranking */}
+                <Card className="shadow-lg border-blue-200">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Trophy className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1 font-bold">
+                      Classement Section
+                    </p>
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getRankBadgeColor(
+                        rankings.sectionRank || 0
+                      )}`}
+                    >
+                      #{rankings.sectionRank}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {student.section} ({rankings.sectionRank}/
+                      {rankings.totalInSection})
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* School Ranking */}
+                {rankings.schoolRank && (
+                  <Card className="shadow-lg border-blue-200">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex items-center justify-center mb-2">
+                        <Building className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <p className="text-xs text-gray-600 mb-1 font-bold">
+                        Classement École
+                      </p>
+                      <div
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getRankBadgeColor(
+                          rankings.schoolRank
+                        )}`}
+                      >
+                        #{rankings.schoolRank}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {rankings.schoolRank}/{rankings.totalInSchool} élèves
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : rankings && examType === "BREVET" ? (
+              // For BREVET - Show only general ranking (all students)
+              <Card className="shadow-lg border-blue-200">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Trophy className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-gray-600 mb-1 font-bold">
+                    Classement Général
+                  </p>
+                  <div
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getRankBadgeColor(
+                      rankings.generalRank || 0
+                    )}`}
+                  >
+                    #{rankings.generalRank}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {rankings.generalRank}/{rankings.totalStudents} élèves
+                    BREVET
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
           </div>
         </div>
       </div>
