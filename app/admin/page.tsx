@@ -872,57 +872,65 @@ export default function AdminPage() {
   // Admin panel (authenticated)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header with logout */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Database className="h-12 w-12 text-blue-600 mr-3" />
-              <h1 className="text-4xl font-bold text-gray-900">
-                Dashboard Administrateur
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        {/* Header with logout - Responsive */}
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-4 lg:space-y-0">
+            <div className="flex items-center justify-center lg:justify-start">
+              <Database className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-blue-600 mr-2 sm:mr-3" />
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                Dashboard Admin
               </h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <Button
                 onClick={testConnection}
                 variant="outline"
-                className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent"
+                size="sm"
+                className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent text-xs sm:text-sm"
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                Test API
+                <TestTube className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Test API</span>
+                <span className="sm:hidden">Test</span>
               </Button>
               <Button
                 onClick={getRegionInfo}
                 variant="outline"
-                className="border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent"
+                size="sm"
+                className="border-blue-300 text-blue-600 hover:bg-blue-50 bg-transparent text-xs sm:text-sm"
               >
-                <Globe className="h-4 w-4 mr-2" />
-                Info Région
+                <Globe className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Info Région</span>
+                <span className="sm:hidden">Région</span>
               </Button>
               <Button
                 onClick={getDatabaseInfo}
                 variant="outline"
-                className="border-purple-300 text-purple-600 hover:bg-purple-50 bg-transparent"
+                size="sm"
+                className="border-purple-300 text-purple-600 hover:bg-purple-50 bg-transparent text-xs sm:text-sm"
               >
-                <HardDrive className="h-4 w-4 mr-2" />
-                Info Database
+                <HardDrive className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Database</span>
+                <span className="sm:hidden">DB</span>
               </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
+                size="sm"
+                className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent text-xs sm:text-sm"
               >
-                Déconnexion
+                <span className="hidden sm:inline">Déconnexion</span>
+                <span className="sm:hidden">Exit</span>
               </Button>
             </div>
           </div>
-          <p className="text-xl text-gray-600">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 px-4 sm:px-0">
             Télécharger et gérer les données des résultats avec PostgreSQL
             Database
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
           {/* Database Storage Information */}
           {databaseInfo && (
             <Card
@@ -934,50 +942,50 @@ export default function AdminPage() {
             >
               <CardHeader>
                 <CardTitle
-                  className={`flex items-center ${
+                  className={`flex items-center text-lg sm:text-xl lg:text-2xl ${
                     databaseInfo.status === "SUCCESS"
                       ? "text-purple-700"
                       : "text-red-700"
                   }`}
                 >
-                  <HardDrive className="h-6 w-6 mr-2" />
+                  <HardDrive className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                   Informations de la Base de Données
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {databaseInfo.status === "SUCCESS" && databaseInfo.summary && (
                   <div className="space-y-6">
-                    {/* Summary */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <p className="text-sm text-purple-600 font-medium">
+                    {/* Summary - Responsive Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200">
+                        <p className="text-xs sm:text-sm text-purple-600 font-medium">
                           Total Étudiants
                         </p>
-                        <p className="text-2xl font-bold text-purple-700">
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">
                           {databaseInfo.summary.totalStudents}
                         </p>
                       </div>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p className="text-sm text-blue-600 font-medium">
+                      <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                        <p className="text-xs sm:text-sm text-blue-600 font-medium">
                           Total Uploads
                         </p>
-                        <p className="text-lg font-bold text-blue-700">
+                        <p className="text-lg sm:text-xl font-bold text-blue-700">
                           {databaseInfo.summary.totalUploads}
                         </p>
                       </div>
-                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <p className="text-sm text-green-600 font-medium">
+                      <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                        <p className="text-xs sm:text-sm text-green-600 font-medium">
                           Années/Types
                         </p>
-                        <p className="text-2xl font-bold text-green-700">
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">
                           {databaseInfo.summary.distinctYearTypes}
                         </p>
                       </div>
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <p className="text-sm text-orange-600 font-medium">
+                      <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+                        <p className="text-xs sm:text-sm text-orange-600 font-medium">
                           Records Totaux
                         </p>
-                        <p className="text-2xl font-bold text-orange-700">
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-700">
                           {databaseInfo.summary.totalDataSize}
                         </p>
                       </div>
@@ -1085,12 +1093,12 @@ export default function AdminPage() {
           {/* File Management */}
           <Card className="shadow-lg border-indigo-200">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between text-2xl text-indigo-700">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-lg sm:text-xl lg:text-2xl text-indigo-700 space-y-3 sm:space-y-0">
                 <div className="flex items-center">
-                  <FileText className="h-6 w-6 mr-2" />
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                   Gestion des Fichiers Uploadés
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={async () => {
                       try {
@@ -1110,26 +1118,29 @@ export default function AdminPage() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                    className="border-orange-300 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm"
                   >
-                    Vider Cache
+                    <span className="hidden sm:inline">Vider Cache</span>
+                    <span className="sm:hidden">Cache</span>
                   </Button>
                   <Button
                     onClick={getFiles}
                     disabled={loadingFiles}
                     variant="outline"
-                    className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 bg-transparent"
+                    size="sm"
+                    className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 bg-transparent text-xs sm:text-sm"
                   >
                     {loadingFiles ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                     ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     )}
-                    Actualiser
+                    <span className="hidden sm:inline">Actualiser</span>
+                    <span className="sm:hidden">Refresh</span>
                   </Button>
                 </div>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Voir tous les fichiers uploadés, détecter les doublons et gérer
                 les données.
               </CardDescription>
@@ -1150,40 +1161,40 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                      <p className="text-sm text-indigo-600 font-medium">
+                  {/* Summary - Responsive Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                    <div className="bg-indigo-50 p-3 sm:p-4 rounded-lg border border-indigo-200">
+                      <p className="text-xs sm:text-sm text-indigo-600 font-medium">
                         Total Fichiers
                       </p>
-                      <p className="text-2xl font-bold text-indigo-700">
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-700">
                         {files.length}
                       </p>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-600 font-medium">
+                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                      <p className="text-xs sm:text-sm text-blue-600 font-medium">
                         Total Étudiants
                       </p>
-                      <p className="text-2xl font-bold text-blue-700">
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">
                         {files.reduce((sum, f) => sum + f.studentCount, 0)}
                       </p>
                     </div>
-                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                      <p className="text-sm text-orange-600 font-medium">
+                    <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+                      <p className="text-xs sm:text-sm text-orange-600 font-medium">
                         Doublons Détectés
                       </p>
-                      <p className="text-2xl font-bold text-orange-700">
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-700">
                         {files.reduce(
                           (sum, f) => sum + (f.duplicateCount || 0),
                           0
                         )}
                       </p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                      <p className="text-sm text-green-600 font-medium">
+                    <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                      <p className="text-xs sm:text-sm text-green-600 font-medium">
                         Taille Totale
                       </p>
-                      <p className="text-lg font-bold text-green-700">
+                      <p className="text-sm sm:text-base lg:text-lg font-bold text-green-700">
                         {files
                           .reduce((sum, f) => sum + f.studentCount * 0.5, 0)
                           .toFixed(0)}{" "}
@@ -1192,87 +1203,136 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Files Table */}
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fichier</TableHead>
-                          <TableHead>Année/Type</TableHead>
-                          <TableHead>Étudiants</TableHead>
-                          <TableHead>Doublons</TableHead>
-                          <TableHead>Taux Admission</TableHead>
-                          <TableHead>Taille</TableHead>
-                          <TableHead>Date Upload</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {files?.map((file) => (
-                          <TableRow key={file.id}>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <FileText className="h-4 w-4 mr-2 text-gray-400" />
-                                <div>
-                                  <p className="font-medium text-sm">
-                                    {file.fileName}
+                  {/* Files Display - Responsive */}
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Fichier</TableHead>
+                            <TableHead>Année/Type</TableHead>
+                            <TableHead>Étudiants</TableHead>
+                            <TableHead>Doublons</TableHead>
+                            <TableHead>Taux Admission</TableHead>
+                            <TableHead>Taille</TableHead>
+                            <TableHead>Date Upload</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {files?.map((file) => (
+                            <TableRow key={file.id}>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <FileText className="h-4 w-4 mr-2 text-gray-400" />
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {file.fileName}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {file.id}
+                                    </p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {file.examType} {file.year}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <p className="font-medium">
+                                    {file.studentCount}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    {file.id}
+                                    {file.uniqueStudents} uniques
                                   </p>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {file.examType} {file.year}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">
-                                  {file.studentCount}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {file.uniqueStudents} uniques
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {file.duplicateCount > 0 ? (
-                                <div className="flex items-center">
-                                  <AlertTriangle className="h-4 w-4 text-orange-500 mr-1" />
-                                  <span className="text-orange-600 font-medium">
-                                    {file.duplicateCount}
+                              </TableCell>
+                              <TableCell>
+                                {file.duplicateCount > 0 ? (
+                                  <div className="flex items-center">
+                                    <AlertTriangle className="h-4 w-4 text-orange-500 mr-1" />
+                                    <span className="text-orange-600 font-medium">
+                                      {file.duplicateCount}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-green-600">
+                                    ✓ Aucun
                                   </span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <p className="font-medium">
+                                    {file.admissionRate}%
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {file.admittedCount}/{file.studentCount}
+                                  </p>
                                 </div>
-                              ) : (
-                                <span className="text-green-600">✓ Aucun</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">
-                                  {file.admissionRate}%
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {file.admittedCount}/{file.studentCount}
-                                </p>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {file.sizeFormatted}
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {new Date(file.uploadedAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => viewFileDetails(file.id)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    onClick={() => deleteFile(file.id)}
+                                    disabled={deletingFile === file.id}
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50"
+                                  >
+                                    {deletingFile === file.id ? (
+                                      <RefreshCw className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-4">
+                    {files?.map((file) => (
+                      <Card key={file.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <FileText className="h-4 w-4 text-gray-400" />
+                                <Badge variant="outline" className="text-xs">
+                                  {file.examType} {file.year}
+                                </Badge>
                               </div>
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {file.sizeFormatted}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {new Date(file.uploadedAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
                               <div className="flex gap-2">
                                 <Button
                                   onClick={() => viewFileDetails(file.id)}
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 w-8 p-0"
+                                  className="h-7 w-7 p-0"
                                 >
                                   <Eye className="h-3 w-3" />
                                 </Button>
@@ -1281,7 +1341,7 @@ export default function AdminPage() {
                                   disabled={deletingFile === file.id}
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50"
+                                  className="h-7 w-7 p-0 border-red-300 text-red-600 hover:bg-red-50"
                                 >
                                   {deletingFile === file.id ? (
                                     <RefreshCw className="h-3 w-3 animate-spin" />
@@ -1290,11 +1350,75 @@ export default function AdminPage() {
                                   )}
                                 </Button>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+
+                            {/* File Name */}
+                            <div>
+                              <p className="font-medium text-sm text-gray-900 break-all">
+                                {file.fileName}
+                              </p>
+                              <p className="text-xs text-gray-500 font-mono">
+                                {file.id}
+                              </p>
+                            </div>
+
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-gray-500 text-xs">
+                                  Étudiants
+                                </p>
+                                <p className="font-medium">
+                                  {file.studentCount}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {file.uniqueStudents} uniques
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500 text-xs">
+                                  Admission
+                                </p>
+                                <p className="font-medium">
+                                  {file.admissionRate}%
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {file.admittedCount}/{file.studentCount}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500 text-xs">
+                                  Doublons
+                                </p>
+                                {file.duplicateCount > 0 ? (
+                                  <div className="flex items-center">
+                                    <AlertTriangle className="h-3 w-3 text-orange-500 mr-1" />
+                                    <span className="text-orange-600 font-medium text-sm">
+                                      {file.duplicateCount}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-green-600 text-sm">
+                                    ✓ Aucun
+                                  </span>
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-gray-500 text-xs">Taille</p>
+                                <p className="font-medium">
+                                  {file.sizeFormatted}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(
+                                    file.uploadedAt
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1502,19 +1626,19 @@ export default function AdminPage() {
             >
               <CardHeader>
                 <CardTitle
-                  className={`flex items-center ${
+                  className={`flex items-center text-lg sm:text-xl lg:text-2xl ${
                     regionInfo.status === "SUCCESS"
                       ? "text-blue-700"
                       : "text-red-700"
                   }`}
                 >
-                  <Globe className="h-6 w-6 mr-2" />
+                  <Globe className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                   Informations de Région et Environnement
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {regionInfo.status === "SUCCESS" && regionInfo.data && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {/* Vercel Info */}
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                       <h4 className="font-semibold text-blue-800 mb-2">
@@ -1578,11 +1702,11 @@ export default function AdminPage() {
                     </div>
 
                     {/* Memory Usage */}
-                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 md:col-span-2">
-                      <h4 className="font-semibold text-purple-800 mb-2">
+                    <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200 sm:col-span-2 lg:col-span-2">
+                      <h4 className="font-semibold text-purple-800 mb-2 text-sm sm:text-base">
                         Utilisation Mémoire
                       </h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                         <p>
                           <strong>RSS:</strong>{" "}
                           {Math.round(
@@ -1615,11 +1739,11 @@ export default function AdminPage() {
                     </div>
 
                     {/* Time Info */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h4 className="font-semibold text-gray-800 mb-2">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">
                         Temps
                       </h4>
-                      <div className="space-y-1 text-sm">
+                      <div className="space-y-1 text-xs sm:text-sm">
                         <p>
                           <strong>Timezone:</strong> {regionInfo.data.timezone}
                         </p>
@@ -1629,7 +1753,9 @@ export default function AdminPage() {
                         </p>
                         <p>
                           <strong>Timestamp:</strong>{" "}
-                          {new Date(regionInfo.data.timestamp).toLocaleString()}
+                          {new Date(
+                            regionInfo.data.timestamp
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -1704,17 +1830,17 @@ export default function AdminPage() {
           {/* Year and Exam Type Selection */}
           <Card className="shadow-lg border-primary-200">
             <CardHeader>
-              <CardTitle className="flex items-center text-2xl text-primary-700">
-                <Calendar className="h-6 w-6 mr-2" />
+              <CardTitle className="flex items-center text-lg sm:text-xl lg:text-2xl text-primary-700">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                 Sélectionner l'Année et le Type d'Examen
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Choisissez l'année et le type d'examen pour lesquels vous
                 souhaitez télécharger ou gérer les données.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="year-select"
@@ -1769,7 +1895,7 @@ export default function AdminPage() {
               </div>
 
               <div className="mt-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 text-center sm:text-left">
                   Sélection actuelle:{" "}
                   <span className="font-semibold text-primary-600">
                     {selectedExamType} {selectedYear}
@@ -1782,21 +1908,31 @@ export default function AdminPage() {
           {/* Multi-Step Upload Process */}
           <Card className="shadow-lg border-blue-200">
             <CardHeader>
-              <CardTitle className="flex items-center text-2xl text-blue-700">
-                <Upload className="h-6 w-6 mr-2" />
-                Télécharger le Fichier Excel - {selectedExamType} {selectedYear}
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center text-lg sm:text-xl lg:text-2xl text-blue-700 space-y-2 sm:space-y-0">
+                <div className="flex items-center">
+                  <Upload className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                  <span>
+                    Télécharger Excel - {selectedExamType} {selectedYear}
+                  </span>
+                </div>
                 {currentStep === "mapping" && (
-                  <Badge variant="secondary" className="ml-2">
-                    Étape 2/3: Mappage des colonnes
+                  <Badge
+                    variant="secondary"
+                    className="sm:ml-2 self-start sm:self-center"
+                  >
+                    Étape 2/3: Mappage
                   </Badge>
                 )}
                 {currentStep === "processing" && (
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge
+                    variant="secondary"
+                    className="sm:ml-2 self-start sm:self-center"
+                  >
                     Étape 3/3: Traitement
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 {currentStep === "upload" && (
                   <>
                     Téléchargez votre fichier RES-{selectedExamType}-
@@ -1819,29 +1955,32 @@ export default function AdminPage() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* Step 1: File Upload */}
               {currentStep === "upload" && (
                 <>
                   {/* File Input */}
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors bg-blue-50">
-                    <FileSpreadsheet className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 sm:p-6 lg:p-8 text-center hover:border-blue-400 transition-colors bg-blue-50">
+                    <FileSpreadsheet className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-blue-400 mx-auto mb-4" />
                     <div className="space-y-2">
-                      <p className="text-lg font-medium text-gray-700">
+                      <p className="text-base sm:text-lg font-medium text-gray-700">
                         {file ? (
                           <>
                             <span className="text-green-600">✓</span>{" "}
-                            {file.name} ({(file.size / 1024 / 1024).toFixed(2)}
+                            <span className="break-all">{file.name}</span> (
+                            {(file.size / 1024 / 1024).toFixed(2)}
                             MB)
                           </>
                         ) : (
                           "Choisir un fichier Excel"
                         )}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500 px-2">
                         Supporte les fichiers .xlsx et .xls (Maximum 4MB)
-                        <br />
-                        Types MIME acceptés: Excel, application/octet-stream
+                        <br className="hidden sm:block" />
+                        <span className="block sm:inline">
+                          Types MIME acceptés: Excel, application/octet-stream
+                        </span>
                         <br />
                         <span className="text-purple-600 font-medium">
                           📦 Stockage: Base de données PostgreSQL
@@ -1852,28 +1991,34 @@ export default function AdminPage() {
                       type="file"
                       accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/octet-stream"
                       onChange={handleFileSelect}
-                      className="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none"
+                      className="mt-4 block w-full text-xs sm:text-sm text-gray-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none"
                     />
                   </div>
 
-                  {/* Action Buttons - Organized in Groups */}
-                  <div className="space-y-4">
+                  {/* Action Buttons - Responsive Layout */}
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Primary Actions */}
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={handleAnalyzeFile}
                         disabled={!file || analyzing}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
                       >
                         {analyzing ? (
                           <>
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                            Analyse en cours...
+                            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
+                            <span className="hidden sm:inline">
+                              Analyse en cours...
+                            </span>
+                            <span className="sm:hidden">Analyse...</span>
                           </>
                         ) : (
                           <>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Analyser le fichier Excel
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                            <span className="hidden sm:inline">
+                              Analyser le fichier Excel
+                            </span>
+                            <span className="sm:hidden">Analyser Excel</span>
                           </>
                         )}
                       </Button>
@@ -1881,53 +2026,69 @@ export default function AdminPage() {
                         onClick={clearData}
                         variant="destructive"
                         disabled={analyzing}
+                        className="text-sm sm:text-base"
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Effacer {selectedExamType} {selectedYear}
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Effacer {selectedExamType} {selectedYear}
+                        </span>
+                        <span className="sm:hidden">Effacer</span>
                       </Button>
                     </div>
 
-                    {/* Secondary Actions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Secondary Actions - Grid for Mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
                         onClick={recalculateRanks}
                         variant="outline"
                         disabled={analyzing}
-                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50 text-sm"
                       >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Recalculer Rangs {selectedExamType} {selectedYear}
+                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Recalculer Rangs {selectedExamType} {selectedYear}
+                        </span>
+                        <span className="sm:hidden">Recalculer Rangs</span>
                       </Button>
                       <Button
                         onClick={debugAdmisLogic}
                         variant="outline"
                         disabled={analyzing}
-                        className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                        className="border-orange-300 text-orange-600 hover:bg-orange-50 text-sm"
                       >
-                        <AlertCircle className="h-4 w-4 mr-2" />
-                        Analyser Logique Admis
+                        <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Analyser Logique Admis
+                        </span>
+                        <span className="sm:hidden">Analyser Admis</span>
                       </Button>
                     </div>
 
-                    {/* Debug/Fix Actions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Debug/Fix Actions - Grid for Mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
                         onClick={() => fixAdmisLogic(true)}
                         variant="outline"
                         disabled={analyzing}
-                        className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                        className="border-purple-300 text-purple-600 hover:bg-purple-50 text-sm"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Test Correction Admis
+                        <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Test Correction Admis
+                        </span>
+                        <span className="sm:hidden">Test Correction</span>
                       </Button>
                       <Button
                         onClick={() => fixAdmisLogic(false)}
                         variant="outline"
                         disabled={analyzing}
-                        className="border-green-300 text-green-600 hover:bg-green-50"
+                        className="border-green-300 text-green-600 hover:bg-green-50 text-sm"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Corriger Logique Admis
+                        <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Corriger Logique Admis
+                        </span>
+                        <span className="sm:hidden">Corriger Admis</span>
                       </Button>
                     </div>
                   </div>
@@ -1938,14 +2099,17 @@ export default function AdminPage() {
               {currentStep === "mapping" && excelAnalysis && (
                 <>
                   <div className="space-y-6">
-                    {/* File Info */}
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800 mb-2">
+                    {/* File Info - Responsive Grid */}
+                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">
                         Fichier analysé:
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
                         <p>
-                          <strong>Nom:</strong> {excelAnalysis.fileName}
+                          <strong>Nom:</strong>{" "}
+                          <span className="break-all">
+                            {excelAnalysis.fileName}
+                          </span>
                         </p>
                         <p>
                           <strong>Taille:</strong>{" "}
@@ -1961,22 +2125,22 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Column Mapping Interface */}
+                    {/* Column Mapping Interface - Responsive */}
                     <div className="space-y-4">
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
                         Mappage des colonnes:
                       </h4>
-                      <div className="grid gap-4">
+                      <div className="grid gap-3 sm:gap-4">
                         {excelAnalysis.requiredFields?.map((field) => (
                           <div
                             key={field.field}
-                            className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center p-4 bg-gray-50 rounded-lg border"
+                            className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start p-3 sm:p-4 bg-gray-50 rounded-lg border"
                           >
-                            <div>
-                              <Label className="font-medium text-gray-700">
+                            <div className="space-y-1">
+                              <Label className="font-medium text-gray-700 text-sm sm:text-base">
                                 {field.field}
                               </Label>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500">
                                 {field.description}
                               </p>
                               {[
@@ -2015,7 +2179,7 @@ export default function AdminPage() {
                                   handleColumnMappingChange(field.field, value)
                                 }
                               >
-                                <SelectTrigger className="w-full">
+                                <SelectTrigger className="w-full text-sm">
                                   <SelectValue placeholder="Sélectionner une colonne..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2030,13 +2194,15 @@ export default function AdminPage() {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-xs sm:text-sm text-gray-600">
                               {columnMapping[field.field] && (
                                 <div className="bg-white p-2 rounded border">
                                   <strong>Exemple:</strong>{" "}
-                                  {excelAnalysis.sampleData[0]?.[
-                                    columnMapping[field.field]
-                                  ] || "N/A"}
+                                  <span className="break-all">
+                                    {excelAnalysis.sampleData[0]?.[
+                                      columnMapping[field.field]
+                                    ] || "N/A"}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -2045,12 +2211,55 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Sample Data Preview */}
+                    {/* Sample Data Preview - Responsive */}
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
                         Aperçu des données (3 premières lignes):
                       </h4>
-                      <div className="overflow-x-auto">
+
+                      {/* Mobile Card View */}
+                      <div className="lg:hidden space-y-3">
+                        {excelAnalysis.sampleData
+                          ?.slice(0, 3)
+                          .map((row, index) => (
+                            <Card
+                              key={index}
+                              className="border border-gray-200"
+                            >
+                              <CardContent className="p-3">
+                                <div className="space-y-2">
+                                  <p className="text-xs text-gray-500 font-medium">
+                                    Ligne {index + 1}
+                                  </p>
+                                  {excelAnalysis.columns
+                                    .slice(0, 6)
+                                    .map((column) => (
+                                      <div
+                                        key={column}
+                                        className="flex justify-between text-xs"
+                                      >
+                                        <span className="font-medium text-gray-600 truncate mr-2">
+                                          {column}:
+                                        </span>
+                                        <span className="text-gray-900 break-all">
+                                          {row[column] || ""}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  {excelAnalysis.columns.length > 6 && (
+                                    <p className="text-xs text-gray-400 text-center">
+                                      ... et {excelAnalysis.columns.length - 6}{" "}
+                                      autres colonnes
+                                    </p>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
+
+                      {/* Desktop Table View */}
+                      <div className="hidden lg:block overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -2090,19 +2299,26 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Navigation Buttons */}
-                  <div className="flex gap-4">
-                    <Button onClick={resetToUpload} variant="outline">
-                      <ArrowLeft className="h-4 w-4 mr-2" />
+                  {/* Navigation Buttons - Responsive */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <Button
+                      onClick={resetToUpload}
+                      variant="outline"
+                      className="text-sm sm:text-base"
+                    >
+                      <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Retour
                     </Button>
                     <Button
                       onClick={handleProcessWithMapping}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-sm sm:text-base"
                     >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Traiter avec ce mappage
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                      <span className="hidden sm:inline">
+                        Traiter avec ce mappage
+                      </span>
+                      <span className="sm:hidden">Traiter</span>
+                      <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-2" />
                     </Button>
                   </div>
                 </>
@@ -2145,14 +2361,14 @@ export default function AdminPage() {
             >
               <CardHeader>
                 <CardTitle
-                  className={`flex items-center ${
+                  className={`flex items-center text-lg sm:text-xl lg:text-2xl ${
                     uploadResult.success ? "text-green-700" : "text-red-700"
                   }`}
                 >
                   {uploadResult.success ? (
-                    <CheckCircle className="h-6 w-6 mr-2" />
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                   ) : (
-                    <AlertCircle className="h-6 w-6 mr-2" />
+                    <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
                   )}
                   {uploadResult.success
                     ? "Téléchargement Réussi"
@@ -2160,116 +2376,122 @@ export default function AdminPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">{uploadResult.message}</p>
+                <p className="mb-4 text-sm sm:text-base">
+                  {uploadResult.message}
+                </p>
 
                 {/* Show error details if available */}
                 {!uploadResult.success && uploadResult.details && (
-                  <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
-                    <h4 className="font-semibold text-red-800 mb-2">
+                  <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-200 mb-4">
+                    <h4 className="font-semibold text-red-800 mb-2 text-sm sm:text-base">
                       Détails de l'erreur:
                     </h4>
-                    <pre className="text-xs text-red-700 overflow-auto">
+                    <pre className="text-xs text-red-700 overflow-auto break-all">
                       {JSON.stringify(uploadResult.details, null, 2)}
                     </pre>
                   </div>
                 )}
 
                 {uploadResult.success && uploadResult.stats && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Success Message with Instructions */}
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                    <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200 mb-4">
                       <div className="flex items-center mb-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                        <h4 className="font-semibold text-green-800">
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2" />
+                        <h4 className="font-semibold text-green-800 text-sm sm:text-base">
                           Données uploadées avec succès !
                         </h4>
                       </div>
-                      <p className="text-green-700 text-sm mb-3">
+                      <p className="text-green-700 text-xs sm:text-sm mb-3">
                         Les données ont été stockées en base de données et sont
                         maintenant disponibles sur le site.
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                           onClick={() => window.open("/", "_blank")}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
                         >
-                          <Globe className="h-4 w-4 mr-2" />
+                          <Globe className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                           Voir sur le Site
                         </Button>
                         <Button
                           onClick={getDatabaseInfo}
                           size="sm"
                           variant="outline"
-                          className="border-green-300 text-green-600 hover:bg-green-50 bg-transparent"
+                          className="border-green-300 text-green-600 hover:bg-green-50 text-xs sm:text-sm"
                         >
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Actualiser Info Base de Données
+                          <HardDrive className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                          Actualiser DB Info
                         </Button>
                       </div>
                     </div>
 
                     {/* Main Statistics */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p className="text-sm text-blue-600 font-medium">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                        <p className="text-xs sm:text-sm text-blue-600 font-medium">
                           Total Étudiants
                         </p>
-                        <p className="text-2xl font-bold text-blue-700">
-                          {uploadResult.stats.totalStudents}
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">
+                          {uploadResult?.stats?.totalStudents || 0}
                         </p>
                       </div>
-                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <p className="text-sm text-green-600 font-medium">
+                      <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                        <p className="text-xs sm:text-sm text-green-600 font-medium">
                           Admis
                         </p>
-                        <p className="text-2xl font-bold text-green-700">
-                          {uploadResult.stats.admittedStudents}
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">
+                          {uploadResult?.stats?.admittedStudents || 0}
                         </p>
                         <p className="text-xs text-green-600">
-                          ({uploadResult.stats.admissionRate}%)
+                          ({uploadResult?.stats?.admissionRate || 0}%)
                         </p>
                       </div>
-                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <p className="text-sm text-purple-600 font-medium">
+                      <div className="bg-purple-50 p-3 sm:p-4 rounded-lg border border-purple-200">
+                        <p className="text-xs sm:text-sm text-purple-600 font-medium">
                           Sections
                         </p>
-                        <p className="text-2xl font-bold text-purple-700">
-                          {uploadResult.stats.sections?.length}
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">
+                          {uploadResult?.stats?.sections?.length || 0}
                         </p>
                       </div>
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <p className="text-sm text-orange-600 font-medium">
+                      <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-orange-200">
+                        <p className="text-xs sm:text-sm text-orange-600 font-medium">
                           Moyenne Générale
                         </p>
-                        <p className="text-2xl font-bold text-orange-700">
-                          {uploadResult.stats.averageScore}
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-700">
+                          {uploadResult?.stats?.averageScore || "0.00"}
                         </p>
                       </div>
                     </div>
 
                     {/* File and Database Info */}
-                    {uploadResult.details && (
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <h4 className="font-semibold text-gray-800 mb-2">
+                    {uploadResult?.details && (
+                      <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
+                        <h4 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">
                           Informations du fichier et stockage:
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                           <div>
                             <p>
-                              <strong>Nom:</strong> {uploadResult.details.name}
+                              <strong>Nom:</strong>{" "}
+                              <span className="break-all">
+                                {uploadResult.details.name}
+                              </span>
                             </p>
                             <p>
                               <strong>Taille:</strong>{" "}
                               {(
-                                uploadResult.details.size /
+                                (uploadResult.details.size || 0) /
                                 1024 /
                                 1024
                               ).toFixed(2)}
                               MB
                             </p>
                             <p>
-                              <strong>Type:</strong> {uploadResult.details.type}
+                              <strong>Type:</strong>{" "}
+                              {uploadResult.details.type || "N/A"}
                             </p>
                           </div>
                           <div>
@@ -2286,32 +2508,55 @@ export default function AdminPage() {
                     )}
 
                     {/* Detailed Information */}
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <p className="font-medium mb-2">Sections (SERIE):</p>
+                        <p className="font-medium mb-2 text-sm sm:text-base">
+                          Sections (SERIE):
+                        </p>
                         <div className="flex flex-wrap gap-2">
-                          {uploadResult.stats.sections?.map((section) => (
-                            <Badge key={section} variant="secondary">
+                          {uploadResult?.stats?.sections?.map((section) => (
+                            <Badge
+                              key={section}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {section}
                             </Badge>
-                          ))}
+                          )) || (
+                            <span className="text-xs text-gray-500">
+                              Aucune section
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       <div>
-                        <p className="font-medium mb-2">Wilayas:</p>
+                        <p className="font-medium mb-2 text-sm sm:text-base">
+                          Wilayas:
+                        </p>
                         <div className="flex flex-wrap gap-2">
-                          {uploadResult.stats.wilayas
-                            .slice(0, 8)
+                          {uploadResult?.stats?.wilayas
+                            ?.slice(0, 8)
                             ?.map((wilaya) => (
-                              <Badge key={wilaya} variant="outline">
+                              <Badge
+                                key={wilaya}
+                                variant="outline"
+                                className="text-xs"
+                              >
                                 {wilaya}
                               </Badge>
                             ))}
-                          {uploadResult.stats.wilayas.length > 8 && (
-                            <Badge variant="outline">
-                              +{uploadResult.stats.wilayas.length - 8} autres
+                          {(uploadResult?.stats?.wilayas?.length || 0) > 8 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{(uploadResult?.stats?.wilayas?.length || 0) - 8}{" "}
+                              autres
                             </Badge>
+                          )}
+                          {(!uploadResult?.stats?.wilayas ||
+                            uploadResult.stats.wilayas.length === 0) && (
+                            <span className="text-xs text-gray-500">
+                              Aucune wilaya
+                            </span>
                           )}
                         </div>
                       </div>
