@@ -529,11 +529,6 @@ export default function ResultsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-center mt-2">
-                        <p className="text-green-600 font-bold text-sm animate-pulse">
-                          Félicitations!
-                        </p>
-                      </div>
                     </div>
                   ) : (
                     // Failure Animation - Student Failed
@@ -688,7 +683,8 @@ export default function ResultsPage() {
                     </div>
                     <div>
                       <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-blue-600 bg-clip-text text-transparent">
-                        Application & Réseaux Sociaux
+                        Télécharger l'application Medrasti et accéder à des
+                        centaines de cours gratuitement
                       </h2>
                       <div className="h-1 w-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-2"></div>
                     </div>
@@ -698,13 +694,67 @@ export default function ResultsPage() {
             </div>
 
             {/* App Download Buttons */}
+
+            {/* Social Media Links */}
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mb-6">
+              {/* YouTube Button */}
+              <a
+                href="https://youtube.com/@medrasti"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
+                title="YouTube"
+              >
+                <svg
+                  className="w-6 h-6 sm:w-7 sm:h-7"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+              </a>
+
+              {/* Facebook Button */}
+              <a
+                href="https://www.facebook.com/Medrasti/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
+                title="Facebook"
+              >
+                <svg
+                  className="w-6 h-6 sm:w-7 sm:h-7"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </a>
+
+              {/* TikTok Button */}
+              <a
+                href="https://www.tiktok.com/@medrasti"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-black text-white rounded-full hover:bg-gray-800 transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-xl"
+                title="TikTok"
+              >
+                <svg
+                  className="w-6 h-6 sm:w-7 sm:h-7"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                </svg>
+              </a>
+            </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-8">
               {/* App Store Button */}
               <a
                 href="https://apps.apple.com/eg/app/%D9%85%D8%AF%D8%B1%D8%B3%D8%AA%D9%8A-medrasti/id6741432147"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="group flex items-center bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
               >
                 <div className="mr-3">
                   <svg
@@ -726,7 +776,7 @@ export default function ResultsPage() {
                 href="https://play.google.com/store/apps/details?id=com.nzamk.madrasty"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="group flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
               >
                 <div className="mr-3">
                   <svg
@@ -743,84 +793,14 @@ export default function ResultsPage() {
                 </div>
               </a>
             </div>
-
-            {/* Social Media Links */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-6">
-              {/* YouTube Button */}
-              <a
-                href="https://youtube.com/@medrasti"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
-              >
-                <div className="mr-3">
-                  <svg
-                    className="w-8 h-8"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs text-red-100">Regardez sur</div>
-                  <div className="text-lg font-semibold">YouTube</div>
-                </div>
-              </a>
-
-              {/* Facebook Button */}
-              <a
-                href="https://www.facebook.com/Medrasti/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
-              >
-                <div className="mr-3">
-                  <svg
-                    className="w-8 h-8"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs text-blue-100">Suivez sur</div>
-                  <div className="text-lg font-semibold">Facebook</div>
-                </div>
-              </a>
-
-              {/* TikTok Button */}
-              <a
-                href="https://www.tiktok.com/@medrasti"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
-              >
-                <div className="mr-3">
-                  <svg
-                    className="w-8 h-8"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-300">Découvrez sur</div>
-                  <div className="text-lg font-semibold">TikTok</div>
-                </div>
-              </a>
-            </div>
-
             {/* Description */}
-            <div className="text-center max-w-2xl mx-auto">
+            {/* <div className="text-center max-w-2xl mx-auto">
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Accédez facilement à vos résultats depuis votre mobile et restez
                 connecté avec nous sur les réseaux sociaux pour les dernières
                 actualités.
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
