@@ -376,32 +376,34 @@ export default function ResultsPage() {
           </Card>
 
           {/* Compact Info Grid */}
-          <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
+          <div className="space-y-4">
             {/* Establishment - MOVED TO FIRST */}
-            <Card className="shadow-lg border-blue-200">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Building className="h-5 w-5 text-blue-600" />
-                </div>
-                <p className="text-xs text-gray-600 mb-1 font-bold">
-                  Établissement
-                </p>
-                <button
-                  onClick={() =>
-                    handleEstablishmentClick(student.etablissement)
-                  }
-                  className="text-sm sm:text-base font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors text-center break-words focus:outline-none"
-                  title={student.etablissement}
-                >
-                  {student.etablissement}
-                </button>
-              </CardContent>
-            </Card>
+            <div className="max-w-md mx-auto">
+              <Card className="shadow-lg border-blue-200">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Building className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-gray-600 mb-1 font-bold">
+                    Établissement
+                  </p>
+                  <button
+                    onClick={() =>
+                      handleEstablishmentClick(student.etablissement)
+                    }
+                    className="text-sm sm:text-base font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors text-center break-words focus:outline-none"
+                    title={student.etablissement}
+                  >
+                    {student.etablissement}
+                  </button>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Ranking Cards */}
+            {/* Ranking Cards - Full width on mobile */}
             {rankings && examType === "BAC" ? (
               // For BAC - Show both section ranking and school ranking
-              <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 {/* Section Ranking */}
                 <Card className="shadow-lg border-blue-200">
                   <CardContent className="p-4 text-center">
@@ -418,10 +420,6 @@ export default function ResultsPage() {
                     >
                       #{rankings.sectionRank}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {student.section} ({rankings.sectionRank}/
-                      {rankings.totalInSection})
-                    </p>
                   </CardContent>
                 </Card>
 
@@ -442,36 +440,31 @@ export default function ResultsPage() {
                       >
                         #{rankings.schoolRank}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {rankings.schoolRank}/{rankings.totalInSchool} élèves
-                      </p>
                     </CardContent>
                   </Card>
                 )}
-              </>
+              </div>
             ) : rankings && examType === "BREVET" ? (
-              // For BREVET - Show only general ranking (all students)
-              <Card className="shadow-lg border-blue-200">
-                <CardContent className="p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Trophy className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <p className="text-xs text-gray-600 mb-1 font-bold">
-                    Classement Général
-                  </p>
-                  <div
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getRankBadgeColor(
-                      rankings.generalRank || 0
-                    )}`}
-                  >
-                    #{rankings.generalRank}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {rankings.generalRank}/{rankings.totalStudents} élèves
-                    BREVET
-                  </p>
-                </CardContent>
-              </Card>
+              // For BREVET - Show only general ranking (all students) - Full width on mobile
+              <div className="w-full">
+                <Card className="shadow-lg border-blue-200">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Trophy className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1 font-bold">
+                      Classement Général
+                    </p>
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getRankBadgeColor(
+                        rankings.generalRank || 0
+                      )}`}
+                    >
+                      #{rankings.generalRank}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ) : null}
           </div>
         </div>
