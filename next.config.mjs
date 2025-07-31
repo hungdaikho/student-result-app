@@ -12,7 +12,20 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    isrMemoryCacheSize: 0, // Disable in-memory cache
+  },
 
+  // Disable all caching for development and debugging
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+
+  // Disable build cache
+  generateBuildId: async () => {
+    return Date.now().toString();
+  },
   // Webpack configuration to handle potential build issues
   webpack: (config, { isServer }) => {
     // Handle WebAssembly files
@@ -49,6 +62,26 @@ const nextConfig = {
             key: "Access-Control-Allow-Headers",
             value: "Content-Type, Authorization",
           },
+          // Disable caching headers
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
+          { key: "Surrogate-Control", value: "no-store" },
+        ],
+      },
+      {
+        source: "/:path*",
+        headers: [
+          // Disable caching for all pages
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
         ],
       },
     ];
