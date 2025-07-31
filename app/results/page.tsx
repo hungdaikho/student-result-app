@@ -353,7 +353,7 @@ export default function ResultsPage() {
           </Card>
 
           {/* Compact Info Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
             {/* Establishment - MOVED TO FIRST */}
             <Card className="shadow-lg border-blue-200">
               <CardContent className="p-4 text-center">
@@ -372,39 +372,6 @@ export default function ResultsPage() {
                 >
                   {student.etablissement}
                 </button>
-              </CardContent>
-            </Card>
-
-            {/* Rank in Establishment - MOVED TO SECOND */}
-            <Card className="shadow-lg border-blue-200">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Building className="h-5 w-5 text-blue-600" />
-                </div>
-                <p className="text-xs text-gray-600 mb-1 font-bold">
-                  Rang Établissement
-                </p>
-                <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                  {student.rang_etablissement || "N/A"}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Rank - DIFFERENT LABEL FOR BREVET */}
-            <Card className="shadow-lg border-blue-200">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Trophy className="h-5 w-5 text-blue-600" />
-                </div>
-                <p className="text-xs text-gray-600 mb-1 font-bold">
-                  {examType === "BREVET" ? "Rang National" : "Rang Section"}
-                </p>
-                <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                  {student.rang}
-                </p>
-                {examType === "BAC" && (
-                  <p className="text-xs text-gray-500">{student.section}</p>
-                )}
               </CardContent>
             </Card>
           </div>

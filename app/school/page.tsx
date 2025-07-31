@@ -388,11 +388,6 @@ export default function SchoolPage() {
                       <p className="text-xs text-gray-600 break-words leading-tight">
                         {student.section}
                       </p>
-                      {student.rang_etablissement && (
-                        <p className="text-xs text-blue-600">
-                          Rang étab: {student.rang_etablissement}
-                        </p>
-                      )}
                     </div>
                   </div>
 
