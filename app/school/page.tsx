@@ -74,11 +74,42 @@ export default function SchoolPage() {
   const schoolName = searchParams.get("name");
   const year = searchParams.get("year") || "2024";
   const examType = (searchParams.get("examType") as "BAC" | "BREVET") || "BAC";
+  const [threshold, setThreshold] = useState<number | null>(null);
+  const fetchThresHold = async () => {
+    try {
+      setLoading(true);
+      const url = `/api/admin/score-threshold?year=${year}&examType=${examType}`;
+      const data = await getCachedRequest(url);
+      if (data.data[0] && data.data[0].threshold) {
+        setThreshold(data.data[0].threshold);
+      } else {
+        setThreshold(null);
+      }
+    } catch (error) {
+      console.error("Error fetching threshold:", error);
+      setError("Erreur lors de la récupération du seuil de score");
+      setThreshold(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderAdmis = (score: number) => {
+    if (!threshold) return "";
+    try {
+      // Làm tròn score và threshold tới 2 chữ số thập phân
+      const roundedScore = parseFloat(score.toFixed(2));
+      const roundedThreshold = parseFloat(threshold.toFixed(2));
 
+      return roundedScore >= roundedThreshold ? "Admis" : "Ajourné";
+    } catch (error) {
+      return "Admis";
+    }
+  };
   useEffect(() => {
     if (schoolName) {
       fetchSchoolStudents(schoolName);
     }
+    fetchThresHold();
   }, [schoolName, examType, year]);
 
   useEffect(() => {
@@ -188,7 +219,9 @@ export default function SchoolPage() {
     );
   }
 
-  const admittedCount = filteredStudents?.filter((s) => s.admis).length;
+  const admittedCount = threshold
+    ? filteredStudents?.filter((s) => renderAdmis(s.moyenne) === "Admis").length
+    : filteredStudents?.filter((s) => s.admis).length;
   const averageScore =
     filteredStudents.length > 0
       ? filteredStudents.reduce((sum, s) => sum + s.moyenne, 0) /
@@ -396,18 +429,37 @@ export default function SchoolPage() {
                     <p className="font-bold text-sm sm:text-lg text-blue-600 mb-1">
                       {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}
                     </p>
-                    <Badge
-                      variant={getDecisionBadgeVariant(student.decision_text)}
-                      className={`text-xs ${
-                        student.decision_text
-                          ?.toLowerCase()
-                          ?.includes("sessionnaire")
-                          ? "badge-sessionnaire"
-                          : ""
-                      }`}
-                    >
-                      {student.decision_text}
-                    </Badge>
+                    {threshold ? (
+                      <Badge
+                        variant={
+                          renderAdmis(student.moyenne) === "Admis"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className={`text-xs ${
+                          student.decision_text
+                            ?.toLowerCase()
+                            ?.includes("sessionnaire")
+                            ? "badge-sessionnaire"
+                            : ""
+                        }`}
+                      >
+                        {renderAdmis(student.moyenne)}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant={getDecisionBadgeVariant(student.decision_text)}
+                        className={`text-xs ${
+                          student.decision_text
+                            ?.toLowerCase()
+                            ?.includes("sessionnaire")
+                            ? "badge-sessionnaire"
+                            : ""
+                        }`}
+                      >
+                        {student.decision_text}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}

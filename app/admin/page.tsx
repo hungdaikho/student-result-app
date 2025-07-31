@@ -23,6 +23,9 @@ import {
   Eye,
   FileText,
   AlertTriangle,
+  Save,
+  Edit,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +54,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScoreThreshold } from "@/types/student";
 
 interface UploadStats {
   totalStudents: number;
@@ -116,6 +120,19 @@ export default function AdminPage() {
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
 
+  // Score Threshold Management States
+  const [scoreThresholds, setScoreThresholds] = useState<ScoreThreshold[]>([]);
+  const [loadingThresholds, setLoadingThresholds] = useState(false);
+  const [savingThreshold, setSavingThreshold] = useState(false);
+  const [thresholdForm, setThresholdForm] = useState({
+    year: selectedYear,
+    examType: selectedExamType,
+    threshold: "",
+    description: "",
+  });
+  const [editingThreshold, setEditingThreshold] =
+    useState<ScoreThreshold | null>(null);
+
   // Available years and exam types for upload
   const availableYears = [2022, 2023, 2024, 2025];
   const examTypes = ["BAC", "BREVET"] as const;
@@ -133,8 +150,18 @@ export default function AdminPage() {
     if (isAuthenticated) {
       getFiles();
       getDatabaseInfo();
+      getScoreThresholds();
     }
   }, [isAuthenticated]);
+
+  // Update threshold form when selected year/exam type changes
+  useEffect(() => {
+    setThresholdForm((prev) => ({
+      ...prev,
+      year: selectedYear,
+      examType: selectedExamType,
+    }));
+  }, [selectedYear, selectedExamType]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +185,147 @@ export default function AdminPage() {
     setExcelAnalysis(null);
     setColumnMapping({});
     setFile(null);
+  };
+
+  // Score Threshold Management Functions
+  const getScoreThresholds = async () => {
+    setLoadingThresholds(true);
+    try {
+      const response = await fetch("/api/admin/score-threshold");
+      const result = await response.json();
+      if (result.success) {
+        setScoreThresholds(result.data);
+      } else {
+        console.error("Failed to fetch score thresholds:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching score thresholds:", error);
+    } finally {
+      setLoadingThresholds(false);
+    }
+  };
+
+  const saveScoreThreshold = async () => {
+    if (
+      !thresholdForm.threshold ||
+      parseFloat(thresholdForm.threshold) < 0 ||
+      parseFloat(thresholdForm.threshold) > 20
+    ) {
+      setUploadResult({
+        success: false,
+        message: "Veuillez entrer un score valide entre 0 et 20",
+      });
+      return;
+    }
+
+    setSavingThreshold(true);
+    try {
+      const method = editingThreshold ? "PUT" : "POST";
+      const url = editingThreshold
+        ? `/api/admin/score-threshold?id=${editingThreshold.id}`
+        : "/api/admin/score-threshold";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          year: thresholdForm.year,
+          examType: thresholdForm.examType,
+          threshold: parseFloat(thresholdForm.threshold),
+          description: thresholdForm.description || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setUploadResult({
+          success: true,
+          message: editingThreshold
+            ? "Seuil de score mis à jour avec succès!"
+            : "Seuil de score sauvegardé avec succès!",
+        });
+
+        // Reset form and refresh list
+        setThresholdForm({
+          year: selectedYear,
+          examType: selectedExamType,
+          threshold: "",
+          description: "",
+        });
+        setEditingThreshold(null);
+        getScoreThresholds();
+      } else {
+        setUploadResult({
+          success: false,
+          message:
+            result.error || "Erreur lors de la sauvegarde du seuil de score",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving score threshold:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur lors de la sauvegarde du seuil de score",
+      });
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
+  const editScoreThreshold = (threshold: ScoreThreshold) => {
+    setEditingThreshold(threshold);
+    setThresholdForm({
+      year: threshold.year,
+      examType: threshold.examType,
+      threshold: threshold.threshold.toString(),
+      description: threshold.description || "",
+    });
+  };
+
+  const deleteScoreThreshold = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce seuil de score ?"))
+      return;
+
+    try {
+      const response = await fetch(`/api/admin/score-threshold?id=${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setUploadResult({
+          success: true,
+          message: "Seuil de score supprimé avec succès!",
+        });
+        getScoreThresholds();
+      } else {
+        setUploadResult({
+          success: false,
+          message:
+            result.error || "Erreur lors de la suppression du seuil de score",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting score threshold:", error);
+      setUploadResult({
+        success: false,
+        message: "Erreur lors de la suppression du seuil de score",
+      });
+    }
+  };
+
+  const cancelEditThreshold = () => {
+    setEditingThreshold(null);
+    setThresholdForm({
+      year: selectedYear,
+      examType: selectedExamType,
+      threshold: "",
+      description: "",
+    });
   };
 
   const testConnection = async () => {
@@ -1089,6 +1257,242 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Score Threshold Management */}
+          <Card className="shadow-lg border-green-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg sm:text-xl lg:text-2xl text-green-700">
+                <Settings className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                Gestion des Seuils de Score
+              </CardTitle>
+              <CardDescription>
+                Définir et gérer les seuils de score pour chaque année et type
+                d'examen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Score Threshold Form */}
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-4">
+                    {editingThreshold
+                      ? "Modifier Seuil de Score"
+                      : "Ajouter Nouveau Seuil de Score"}
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="threshold-year"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Année
+                      </Label>
+                      <Select
+                        value={thresholdForm.year.toString()}
+                        onValueChange={(value) =>
+                          setThresholdForm((prev) => ({
+                            ...prev,
+                            year: parseInt(value),
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableYears.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="threshold-examType"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Type d'Examen
+                      </Label>
+                      <Select
+                        value={thresholdForm.examType}
+                        onValueChange={(value: "BAC" | "BREVET") =>
+                          setThresholdForm((prev) => ({
+                            ...prev,
+                            examType: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="BAC">BAC</SelectItem>
+                          <SelectItem value="BREVET">BREVET</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="threshold-score"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Seuil de Score (0-20)
+                      </Label>
+                      <Input
+                        id="threshold-score"
+                        type="number"
+                        min="0"
+                        max="20"
+                        step="0.1"
+                        placeholder="Ex: 14.5"
+                        value={thresholdForm.threshold}
+                        onChange={(e) =>
+                          setThresholdForm((prev) => ({
+                            ...prev,
+                            threshold: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Button
+                        onClick={saveScoreThreshold}
+                        disabled={savingThreshold || !thresholdForm.threshold}
+                        className="bg-green-600 hover:bg-green-700 text-white mt-6"
+                      >
+                        {savingThreshold ? (
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        ) : editingThreshold ? (
+                          <Save className="h-4 w-4 mr-2" />
+                        ) : (
+                          <Plus className="h-4 w-4 mr-2" />
+                        )}
+                        {editingThreshold ? "Mettre à Jour" : "Ajouter"}
+                      </Button>
+
+                      {editingThreshold && (
+                        <Button
+                          onClick={cancelEditThreshold}
+                          variant="outline"
+                          className="border-gray-300 mt-6"
+                        >
+                          Annuler
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-4"></div>
+                </div>
+
+                {/* Score Thresholds List */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-800">
+                      Seuils de Score Existants
+                    </h4>
+                    <Button
+                      onClick={getScoreThresholds}
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingThresholds}
+                    >
+                      {loadingThresholds ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+
+                  {loadingThresholds ? (
+                    <div className="text-center py-4">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto text-gray-400" />
+                      <p className="text-gray-500 mt-2">Chargement...</p>
+                    </div>
+                  ) : scoreThresholds.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Année</TableHead>
+                            <TableHead>Type d'Examen</TableHead>
+                            <TableHead>Seuil de Score</TableHead>
+                            <TableHead>Créé le</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {scoreThresholds.map((threshold) => (
+                            <TableRow key={threshold.id}>
+                              <TableCell className="font-medium">
+                                {threshold.year}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {threshold.examType}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-semibold text-green-600">
+                                {threshold.threshold}/20
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-500">
+                                {threshold.createdAt
+                                  ? new Date(
+                                      threshold.createdAt
+                                    ).toLocaleDateString()
+                                  : "-"}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() =>
+                                      editScoreThreshold(threshold)
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      deleteScoreThreshold(threshold.id!)
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-red-300 text-red-600 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                      <Settings className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500">
+                        Aucun seuil de score défini
+                      </p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Ajoutez le premier seuil de score en utilisant le
+                        formulaire ci-dessus
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* File Management */}
           <Card className="shadow-lg border-indigo-200">

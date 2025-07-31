@@ -72,6 +72,7 @@ export class StudentService {
 
     // Lấy thống kê
     static async getStatistics(year: number, examType: "BAC" | "BREVET"): Promise<StatisticsData> {
+        // Lấy dữ liệu học sinh
         const students = await prisma.student.findMany({
             where: {
                 year,
@@ -79,13 +80,34 @@ export class StudentService {
             }
         })
 
-        const totalStudents = students.length
-        const admittedStudents = students?.filter(s => s.admis).length
-        const admissionRate = totalStudents > 0 ? ((admittedStudents / totalStudents) * 100).toFixed(1) : "0.0"
+        // Lấy điểm chuẩn cho năm và loại kỳ thi này
+        const scoreThreshold = await prisma.scoreThreshold.findUnique({
+            where: {
+                year_examType: {
+                    year,
+                    examType
+                }
+            }
+        })
 
-        // Calculate sessionnaireRate (example: students with moyenne >= 10 but < passing grade)
-        const sessionnaireStudents = students?.filter(s => !s.admis && s.moyenne >= 8).length
-        const sessionnaireRate = totalStudents > 0 ? ((sessionnaireStudents / totalStudents) * 100).toFixed(1) : "0.0"
+        const totalStudents = students.length
+
+        // Tính toán admitted students dựa trên threshold hoặc trường admis
+        let admittedStudents: number
+
+        if (scoreThreshold) {
+            // Sử dụng điểm chuẩn để xác định đậu/rớt
+            admittedStudents = students.filter(s => s.moyenne >= scoreThreshold.threshold).length
+        } else {
+            // Fallback: sử dụng trường admis như cũ
+            admittedStudents = students.filter(s => s.admis).length
+        }
+
+        // Số học sinh trượt = tổng số - số đậu
+        const ajournedStudents = totalStudents - admittedStudents
+
+        const admissionRate = totalStudents > 0 ? ((admittedStudents / totalStudents) * 100).toFixed(1) : "0.0"
+        const ajournedRate = totalStudents > 0 ? ((ajournedStudents / totalStudents) * 100).toFixed(1) : "0.0"
 
         const averageScore = totalStudents > 0 ?
             (students.reduce((sum, s) => sum + s.moyenne, 0) / totalStudents).toFixed(2) : "0.00"
@@ -97,7 +119,13 @@ export class StudentService {
                 acc[section] = { total: 0, admitted: 0 }
             }
             acc[section].total++
-            if (student.admis) acc[section].admitted++
+
+            // Xác định đậu/rớt dựa trên threshold hoặc trường admis
+            const isAdmitted = scoreThreshold
+                ? student.moyenne >= scoreThreshold.threshold
+                : student.admis
+
+            if (isAdmitted) acc[section].admitted++
             return acc
         }, {} as Record<string, { total: number, admitted: number }>)
 
@@ -117,7 +145,13 @@ export class StudentService {
                 acc[wilaya] = { total: 0, admitted: 0 }
             }
             acc[wilaya].total++
-            if (student.admis) acc[wilaya].admitted++
+
+            // Xác định đậu/rớt dựa trên threshold hoặc trường admis
+            const isAdmitted = scoreThreshold
+                ? student.moyenne >= scoreThreshold.threshold
+                : student.admis
+
+            if (isAdmitted) acc[wilaya].admitted++
             return acc
         }, {} as Record<string, { total: number, admitted: number }>)
 
@@ -134,7 +168,7 @@ export class StudentService {
             totalStudents,
             admittedStudents,
             admissionRate,
-            sessionnaireRate,
+            sessionnaireRate: ajournedRate, // Note: sessionnaireRate now represents ajournedRate (trượt) for simplicity - only 2 states: Admis Sn and Ajourné Sn
             averageScore,
             sectionStats: sectionStatsArray,
             wilayaStats: wilayaStatsArray,
@@ -147,14 +181,34 @@ export class StudentService {
     // For BAC: returns object grouped by sections with top 10 each
     // For BREVET: returns array of top 10 students (Top 10 Mauritanie)
     static async getLeaderboard(year: number, examType: "BAC" | "BREVET", limit: number = 100) {
-        if (examType === "BAC") {
-            // For BAC: return object grouped by sections with top 10 ADMITTED students each
-            const students = await prisma.student.findMany({
-                where: {
+        // Lấy điểm chuẩn cho năm và loại kỳ thi này
+        const scoreThreshold = await prisma.scoreThreshold.findUnique({
+            where: {
+                year_examType: {
                     year,
-                    examType,
-                    admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
-                },
+                    examType
+                }
+            }
+        })
+
+        if (examType === "BAC") {
+            // For BAC: return object grouped by sections with top students each
+            let whereCondition: any = {
+                year,
+                examType
+            }
+
+            // Lọc học sinh đậu dựa trên threshold hoặc trường admis
+            if (scoreThreshold) {
+                whereCondition.moyenne = {
+                    gte: scoreThreshold.threshold
+                }
+            } else {
+                whereCondition.admis = true
+            }
+
+            const students = await prisma.student.findMany({
+                where: whereCondition,
                 orderBy: {
                     moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
                 },
@@ -222,7 +276,12 @@ export class StudentService {
                 })
 
                 const totalInSection = allSectionStudents.length
-                const admittedInSection = allSectionStudents.filter(s => s.admis).length
+
+                // Tính toán admitted dựa trên threshold hoặc trường admis
+                const admittedInSection = scoreThreshold
+                    ? allSectionStudents.filter(s => s.moyenne >= scoreThreshold.threshold).length
+                    : allSectionStudents.filter(s => s.admis).length
+
                 const totalScoreInSection = allSectionStudents.reduce((sum, s) => sum + s.moyenne, 0)
 
                 sectionStats[section] = {
@@ -249,13 +308,23 @@ export class StudentService {
 
             return result
         } else {
-            // For BREVET: return array of top 10 ADMITTED students only
+            // For BREVET: return array of top students only
+            let whereCondition: any = {
+                year,
+                examType
+            }
+
+            // Lọc học sinh đậu dựa trên threshold hoặc trường admis
+            if (scoreThreshold) {
+                whereCondition.moyenne = {
+                    gte: scoreThreshold.threshold
+                }
+            } else {
+                whereCondition.admis = true
+            }
+
             const students = await prisma.student.findMany({
-                where: {
-                    year,
-                    examType,
-                    admis: true  // ⭐ CHỈ LẤY HỌC SINH ĐÃ ĐƯỢC ADMIS
-                },
+                where: whereCondition,
                 orderBy: {
                     moyenne: 'desc'  // ⭐ SẮP XẾP THEO ĐIỂM GIẢM DẦN
                 },
@@ -309,6 +378,16 @@ export class StudentService {
     static async getStudentsByWilayaPaginated(wilaya: string, year: number, examType: "BAC" | "BREVET", page: number, limit: number, section: string) {
         const offset = (page - 1) * limit
 
+        // Lấy điểm chuẩn cho năm và loại kỳ thi này
+        const scoreThreshold = await prisma.scoreThreshold.findUnique({
+            where: {
+                year_examType: {
+                    year,
+                    examType
+                }
+            }
+        })
+
         // Build where condition
         const whereCondition: any = {
             wilaya,
@@ -359,7 +438,11 @@ export class StudentService {
             }
         })
 
-        const admittedCount = allStudents.filter(s => s.admis).length
+        // Tính toán admitted dựa trên threshold hoặc trường admis
+        const admittedCount = scoreThreshold
+            ? allStudents.filter(s => s.moyenne >= scoreThreshold.threshold).length
+            : allStudents.filter(s => s.admis).length
+
         const averageScore = allStudents.length > 0
             ? (allStudents.reduce((sum, s) => sum + s.moyenne, 0) / allStudents.length)
             : 0
@@ -565,5 +648,35 @@ export class StudentService {
             console.error(`[StudentService] Failed to save upload info:`, error)
             throw new Error(`Failed to save upload info: ${error.message}`)
         }
+    }
+
+    // Helper function để kiểm tra học sinh có đậu hay không dựa trên threshold
+    static async isStudentAdmitted(student: { moyenne: number, admis: boolean }, year: number, examType: "BAC" | "BREVET"): Promise<boolean> {
+        const scoreThreshold = await prisma.scoreThreshold.findUnique({
+            where: {
+                year_examType: {
+                    year,
+                    examType
+                }
+            }
+        })
+
+        if (scoreThreshold) {
+            return student.moyenne >= scoreThreshold.threshold
+        } else {
+            return student.admis
+        }
+    }
+
+    // Helper function để lấy điểm chuẩn cho năm và loại kỳ thi
+    static async getScoreThreshold(year: number, examType: "BAC" | "BREVET") {
+        return await prisma.scoreThreshold.findUnique({
+            where: {
+                year_examType: {
+                    year,
+                    examType
+                }
+            }
+        })
     }
 }

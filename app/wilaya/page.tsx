@@ -87,10 +87,41 @@ export default function WilayaPage() {
   const wilayaName = searchParams.get("name");
   const year = searchParams.get("year") || "2024";
   const examType = searchParams.get("examType") || "BAC";
+  const [threshold, setThreshold] = useState<number | null>(null);
+  const fetchThresHold = async () => {
+    try {
+      setLoading(true);
+      const url = `/api/admin/score-threshold?year=${year}&examType=${examType}`;
+      const data = await getCachedRequest(url);
+      if (data.data[0] && data.data[0].threshold) {
+        setThreshold(data.data[0].threshold);
+      } else {
+        setThreshold(null);
+      }
+    } catch (error) {
+      console.error("Error fetching threshold:", error);
+      setError("Erreur lors de la récupération du seuil de score");
+      setThreshold(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderAdmis = (score: number) => {
+    if (!threshold) return "";
+    try {
+      // Làm tròn score và threshold tới 2 chữ số thập phân
+      const roundedScore = parseFloat(score.toFixed(2));
+      const roundedThreshold = parseFloat(threshold.toFixed(2));
 
+      return roundedScore >= roundedThreshold ? "Admis" : "Ajourné";
+    } catch (error) {
+      return "Admis";
+    }
+  };
   useEffect(() => {
     if (wilayaName) {
       fetchWilayaStudents(wilayaName, 1, selectedSection);
+      fetchThresHold();
     }
   }, [wilayaName, year, examType, selectedSection]);
 
@@ -394,17 +425,45 @@ export default function WilayaPage() {
                     </div>
 
                     {/* Right side - Score and Decision - CENTERED */}
-                    <div className="text-right flex-shrink-0 ml-2 flex flex-col items-center">
-                      <p className="font-bold text-sm sm:text-lg text-blue-600">
-                        {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}
-                      </p>
-                      <Badge
-                        variant={student.admis ? "default" : "destructive"}
-                        className="text-xs mt-1"
-                      >
-                        {student.admis ? "Admis Sn" : "Ajourné Sn"}
-                      </Badge>
-                    </div>
+                    {threshold ? (
+                      <div className="text-right flex-shrink-0 ml-2 flex flex-col items-center">
+                        <p
+                          className={`font-bold text-sm sm:text-lg ${
+                            renderAdmis(student.moyenne) === "Admis"
+                              ? "text-blue-700"
+                              : "text-red-700"
+                          }`}
+                        >
+                          {student.moyenne
+                            ? student.moyenne.toFixed(2)
+                            : "0.00"}
+                        </p>
+                        <Badge
+                          variant={student.admis ? "default" : "destructive"}
+                          className={`text-xs mt-1 ${
+                            renderAdmis(student.moyenne) === "Admis"
+                              ? "bg-blue-600 text-white"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {renderAdmis(student.moyenne)}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <div className="text-right flex-shrink-0 ml-2 flex flex-col items-center">
+                        <p className="font-bold text-sm sm:text-lg text-blue-600">
+                          {student.moyenne
+                            ? student.moyenne.toFixed(2)
+                            : "0.00"}
+                        </p>
+                        <Badge
+                          variant={student.admis ? "default" : "destructive"}
+                          className="text-xs mt-1"
+                        >
+                          {student.admis ? "Admis Sn" : "Ajourné Sn"}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

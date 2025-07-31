@@ -87,7 +87,37 @@ export default function ResultsPage() {
   const returnTo = searchParams.get("returnTo");
   const year = searchParams.get("year") || "2024";
   const examType = (searchParams.get("examType") as "BAC" | "BREVET") || "BAC";
+  const [threshold, setThreshold] = useState<number | null>(null);
+  const fetchThresHold = async () => {
+    try {
+      setLoading(true);
+      const url = `/api/admin/score-threshold?year=${year}&examType=${examType}`;
+      const data = await getCachedRequest(url);
+      if (data.data[0] && data.data[0].threshold) {
+        setThreshold(data.data[0].threshold);
+      } else {
+        setThreshold(null);
+      }
+    } catch (error) {
+      console.error("Error fetching threshold:", error);
+      setError("Erreur lors de la récupération du seuil de score");
+      setThreshold(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderAdmis = (score: number) => {
+    if (!threshold) return "";
+    try {
+      // Làm tròn score và threshold tới 2 chữ số thập phân
+      const roundedScore = parseFloat(score.toFixed(2));
+      const roundedThreshold = parseFloat(threshold.toFixed(2));
 
+      return roundedScore >= roundedThreshold ? "Admis" : "Ajourné";
+    } catch (error) {
+      return "Admis";
+    }
+  };
   // Handle window size detection safely
   useEffect(() => {
     const checkMobile = () => {
@@ -107,6 +137,7 @@ export default function ResultsPage() {
     if (matricule) {
       fetchStudentResult(matricule);
     }
+    fetchThresHold();
   }, [matricule]);
 
   const fetchStudentResult = async (matricule: string) => {
@@ -156,7 +187,14 @@ export default function ResultsPage() {
     );
   };
 
-  const getDecisionIcon = (decisionText: string) => {
+  const getDecisionIcon = (decisionText: string, monyenne?: any) => {
+    if (monyenne) {
+      if (renderAdmis(monyenne) === "Admis") {
+        return <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />;
+      } else {
+        return <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />;
+      }
+    }
     const decision = decisionText?.toLowerCase();
     if (
       decision?.includes("admis") ||
@@ -170,10 +208,18 @@ export default function ResultsPage() {
     ) {
       return <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />;
     }
+
     return <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />;
   };
 
-  const getDecisionTextColor = (decisionText: string) => {
+  const getDecisionTextColor = (decisionText: string, moyenne?: any) => {
+    if (moyenne) {
+      if (renderAdmis(moyenne) === "Admis") {
+        return "text-blue-700";
+      } else {
+        return "text-red-700";
+      }
+    }
     const decision = decisionText?.toLowerCase();
     if (
       decision?.includes("admis") ||
@@ -196,7 +242,13 @@ export default function ResultsPage() {
     if (rank === 3) return "bg-amber-600 hover:bg-amber-700";
     return "bg-blue-500 hover:bg-blue-600";
   };
-
+  const renderIcon = (admis: boolean, monyenne: any) => {
+    if (threshold) {
+      return renderAdmis(monyenne) === "Admis";
+    } else {
+      return admis;
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50 flex items-center justify-center">
@@ -327,36 +379,100 @@ export default function ResultsPage() {
               <div className="flex justify-center">
                 <CircularProgress
                   value={student.moyenne}
-                  label={examType === "BREVET" ? "" : student.decision_text}
-                  className="mb-4"
+                  label={
+                    examType === "BREVET"
+                      ? ""
+                      : threshold
+                      ? renderAdmis(student.moyenne)
+                      : student.decision_text
+                  }
+                  className={`mb-4 ${
+                    threshold
+                      ? getDecisionTextColor(
+                          student.decision_text,
+                          student.moyenne
+                        )
+                      : ""
+                  }`}
                   size={isMobile ? 180 : 220}
                   strokeWidth={isMobile ? 14 : 18}
+                  color={
+                    threshold
+                      ? getDecisionTextColor(
+                          student.decision_text,
+                          student.moyenne
+                        )
+                      : ""
+                  }
                 />
               </div>
               <div className="text-center">
                 {examType === "BREVET" ? (
                   // For BREVET - Just show the score
+                  threshold ? (
+                    <div>
+                      <p className="text-lg sm:text-xl font-bold text-blue-600 mb-2">
+                        Note:{" "}
+                        {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}
+                        /20
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        {getDecisionIcon(
+                          student.decision_text,
+                          student.moyenne
+                        )}
+                        <span
+                          className={`text-lg sm:text-xl font-bold ${getDecisionTextColor(
+                            student.decision_text,
+                            student.moyenne
+                          )}`}
+                        >
+                          {renderAdmis(student.moyenne)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg sm:text-xl font-bold text-blue-600 mb-2">
+                        Note:{" "}
+                        {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}
+                        /20
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        {getDecisionIcon(student.decision_text)}
+                        <span
+                          className={`text-lg sm:text-xl font-bold ${getDecisionTextColor(
+                            student.decision_text
+                          )}`}
+                        >
+                          {student.decision_text}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                ) : // For BAC - Show decision and score
+                threshold ? (
                   <div>
-                    <p className="text-lg sm:text-xl font-bold text-blue-600 mb-2">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      {getDecisionIcon(student.decision_text, student.moyenne)}
+                      <span
+                        className={`text-lg sm:text-xl font-bold ${getDecisionTextColor(
+                          student.decision_text,
+                          student.moyenne
+                        )}`}
+                      >
+                        {renderAdmis(student.moyenne)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
                       Note:{" "}
                       {student.moyenne ? student.moyenne.toFixed(2) : "0.00"}/20
                     </p>
-                    <div className="flex items-center justify-center gap-2">
-                      {getDecisionIcon(student.decision_text)}
-                      <span
-                        className={`text-lg sm:text-xl font-bold ${getDecisionTextColor(
-                          student.decision_text
-                        )}`}
-                      >
-                        {student.decision_text}
-                      </span>
-                    </div>
                   </div>
                 ) : (
-                  // For BAC - Show decision and score
                   <div>
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      {getDecisionIcon(student.decision_text)}
+                      {getDecisionIcon(student.decision_text, student.moyenne)}
                       <span
                         className={`text-lg sm:text-xl font-bold ${getDecisionTextColor(
                           student.decision_text
@@ -374,7 +490,7 @@ export default function ResultsPage() {
 
                 {/* Animated Result Image */}
                 <div className="mt-6 flex justify-center">
-                  {student.admis ? (
+                  {renderIcon(student.admis, student.moyenne) ? (
                     // Success Animation - Student Passed
                     <div className="relative">
                       <div className="animate-bounce">

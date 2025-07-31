@@ -10,6 +10,7 @@ interface CircularProgressProps {
   className?: string;
   showValue?: boolean;
   label?: string;
+  color?: string;
 }
 
 export function CircularProgress({
@@ -20,6 +21,7 @@ export function CircularProgress({
   className = "",
   showValue = true,
   label = "",
+  color,
 }: CircularProgressProps) {
   const [progress, setProgress] = useState(0);
   const [displayValue, setDisplayValue] = useState(0);
@@ -53,7 +55,6 @@ export function CircularProgress({
       clearInterval(valueTimer);
     };
   }, [value, percentage]);
-
   return (
     <div
       className={`relative inline-flex items-center justify-center ${className}`}
@@ -78,7 +79,9 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#005EDD"
+          stroke={
+            color ? (color === "text-red-700" ? "red" : "#005EDD") : "#005EDD"
+          }
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={strokeDasharray}
@@ -91,13 +94,18 @@ export function CircularProgress({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {showValue && (
           <>
-            <span className="text-4xl font-bold" style={{ color: "#005EDD" }}>
+            <span
+              className={`text-4xl font-bold ${
+                color ? color : "text-blue-600"
+              }`}
+              style={{ color: color ? "" : "#005EDD" }}
+            >
               {displayValue ? displayValue.toFixed(2) : "0.00"}
             </span>
             {label && (
               <span
-                className="text-lg font-medium mt-1"
-                style={{ color: "#005EDD" }}
+                className={`text-lg font-medium mt-1 ${color && color}`}
+                style={{ color: color ? "" : "#005EDD" }}
               >
                 {label}
               </span>

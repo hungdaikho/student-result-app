@@ -349,8 +349,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Store data in database
-    console.log(`💾 Storing ${students.length} students in database...`)
     const startTime = Date.now()
 
     try {
@@ -387,10 +385,6 @@ export async function POST(request: NextRequest) {
       const schools = [...new Set(students.map(s => s.ecole))].filter(Boolean)
       const establishments = [...new Set(students.map(s => s.etablissement))].filter(Boolean)
       const wilayas = [...new Set(students.map(s => s.wilaya))].filter(Boolean)
-
-      // Note: Cache will be automatically cleared on next request
-      console.log("🧹 Caches will be cleared on next request")
-
       return NextResponse.json({
         message: `Successfully processed ${result.uploadedCount} student records for ${examType} ${year}`,
         success: true,

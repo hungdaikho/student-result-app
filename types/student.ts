@@ -52,6 +52,16 @@ export interface StatisticsData {
     examType: "BAC" | "BREVET"
 }
 
+export interface ScoreThreshold {
+    id?: string
+    year: number
+    examType: "BAC" | "BREVET"
+    threshold: number
+    description?: string
+    createdAt?: Date
+    updatedAt?: Date
+}
+
 export interface LeaderboardStudent {
     matricule: string
     nom_complet: string

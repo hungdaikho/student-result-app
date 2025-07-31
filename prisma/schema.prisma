@@ -51,6 +51,20 @@ model DataUpload {
   @@map("data_uploads")
 }
 
+model ScoreThreshold {
+  id            String   @id @default(cuid())
+  year          Int
+  examType      ExamType
+  threshold     Float    // Điểm chuẩn
+  description   String?  // Mô tả thêm
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([year, examType])
+  @@index([year, examType])
+  @@map("score_thresholds")
+}
+
 enum ExamType {
   BAC
   BREVET
