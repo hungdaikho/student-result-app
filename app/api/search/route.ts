@@ -4,18 +4,6 @@ import { StudentService } from "@/lib/student-service"
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
-// In-memory cache
-let cache: { [key: string]: any } = {}
-let cacheTimestamp = 0
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
-
-// Helper function to clear cache (internal use only)
-function clearCache() {
-  cache = {}
-  cacheTimestamp = 0
-  console.log("🧹 Search cache cleared")
-}
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -25,15 +13,6 @@ export async function GET(request: NextRequest) {
 
     if (!matricule) {
       return NextResponse.json({ error: "Matricule is required" }, { status: 400 })
-    }
-
-    const cacheKey = `${matricule}-${year}-${examType}`
-    const now = Date.now()
-
-    // Check cache
-    if (cache[cacheKey] && now - cacheTimestamp < CACHE_DURATION) {
-      console.log(`🔍 Using cached search result for ${cacheKey}`)
-      return NextResponse.json(cache[cacheKey])
     }
 
     console.log(`🔍 Searching for matricule: ${matricule} in ${examType} ${year}`)
@@ -47,10 +26,6 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`✅ Found student: ${student.nom_complet} (${matricule}) in ${examType} ${year}`)
-
-    // Cache the result
-    cache[cacheKey] = student
-    cacheTimestamp = now
 
     return NextResponse.json(student)
   } catch (error) {
